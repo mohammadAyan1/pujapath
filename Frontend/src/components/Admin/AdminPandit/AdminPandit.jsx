@@ -9,6 +9,10 @@
 //   FaCalendarAlt,
 //   FaBuilding,
 //   FaInfoCircle,
+//   FaRupeeSign,
+//   FaPhoneAlt,
+//   FaComments,
+//   FaUserSlash,
 // } from "react-icons/fa";
 // import { GiAstronautHelmet } from "react-icons/gi";
 // import api from "../../../api/axios";
@@ -49,10 +53,16 @@
 //     temple_id: "",
 //     type: "pandit",
 //     status: "active",
+
+//     is_free: 0,
+//     price_per_minute: "",
+
+//     // ✅ NEW: Communication (multi)
+//     communication: [], // ["call","chat","offline"]
 //   });
 
 //   /* ===============================
-//      FETCH ALL PANDITS ✅ (FILTER BY ACTIVE/INACTIVE SAME AS CATEGORY)
+//      FETCH ALL PANDITS ✅
 //   =============================== */
 //   const fetchAllPandits = async () => {
 //     try {
@@ -78,7 +88,6 @@
 
 //   /* ===============================
 //      FETCH ALL TEMPLES ✅
-//      (ONLY ACTIVE TEMPLES FOR DROPDOWN)
 //   =============================== */
 //   const fetchAllTemples = async () => {
 //     try {
@@ -95,7 +104,6 @@
 //     }
 //   };
 
-//   /* ✅ RUN FETCH WHEN ACTIVE/INACTIVE CHANGES */
 //   useEffect(() => {
 //     if (firstRun.current) {
 //       firstRun.current = false;
@@ -103,7 +111,6 @@
 //       fetchAllTemples();
 //       return;
 //     }
-
 //     fetchAllPandits();
 //   }, [showActive]);
 
@@ -155,9 +162,7 @@
 //       leaveTimeoutRef.current = null;
 //     }
 
-//     if (hoverTimeoutRef.current) {
-//       clearTimeout(hoverTimeoutRef.current);
-//     }
+//     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
 
 //     hoverTimeoutRef.current = setTimeout(() => {
 //       calculateTooltipPosition(e);
@@ -209,7 +214,35 @@
 //   =============================== */
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
+
+//     if (name === "is_free") {
+//       const freeVal = Number(value) === 1 ? 1 : 0;
+//       setFormData((prev) => ({
+//         ...prev,
+//         is_free: freeVal,
+//         price_per_minute: freeVal === 1 ? "" : prev.price_per_minute,
+//       }));
+//       return;
+//     }
+
 //     setFormData((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   // ✅ NEW: handle communication checkbox
+//   const handleCommunicationChange = (option) => {
+//     setFormData((prev) => {
+//       const exists = prev.communication.includes(option);
+
+//       // offline selected -> allow with others too (your choice)
+//       // if you want offline only => you can block others here
+
+//       return {
+//         ...prev,
+//         communication: exists
+//           ? prev.communication.filter((x) => x !== option)
+//           : [...prev.communication, option],
+//       };
+//     });
 //   };
 
 //   const handleImageChange = (e) => {
@@ -258,6 +291,12 @@
 //       return;
 //     }
 
+//     // ✅ NEW validation: communication must have at least 1 option
+//     if (!formData.communication || formData.communication.length === 0) {
+//       toast.error("Please select at least one Communication option");
+//       return;
+//     }
+
 //     if (formData.rating < 0 || formData.rating > 5) {
 //       toast.error("Rating must be between 0 and 5");
 //       return;
@@ -268,16 +307,30 @@
 //       return;
 //     }
 
+//     if (Number(formData.is_free) === 0) {
+//       const priceNum = Number(formData.price_per_minute);
+//       if (!priceNum || priceNum <= 0) {
+//         toast.error("Please enter valid Price Per Minute (₹)");
+//         return;
+//       }
+//     }
+
 //     try {
 //       const formDataToSend = new FormData();
 
 //       Object.keys(formData).forEach((key) => {
-//         formDataToSend.append(key, formData[key]);
+//         if (key === "communication") {
+//           // ✅ send array as JSON
+//           formDataToSend.append("communication", JSON.stringify(formData.communication));
+//         } else {
+//           formDataToSend.append(key, formData[key]);
+//         }
 //       });
 
 //       if (imageFile) formDataToSend.append("image", imageFile);
 
 //       let res;
+
 //       if (isEditMode && editingId) {
 //         res = await api.put(`/pandit/${editingId}`, formDataToSend, {
 //           headers: { "Content-Type": "multipart/form-data" },
@@ -315,6 +368,11 @@
 //       temple_id: "",
 //       type: "pandit",
 //       status: "active",
+//       is_free: 0,
+//       price_per_minute: "",
+
+//       // ✅ NEW
+//       communication: [],
 //     });
 
 //     setImageFile(null);
@@ -330,6 +388,16 @@
 //     setIsEditMode(true);
 //     setEditingId(pandit.id);
 
+//     // ✅ communication can come as string JSON or array
+//     let comm = [];
+//     try {
+//       if (Array.isArray(pandit.communication)) comm = pandit.communication;
+//       else if (typeof pandit.communication === "string")
+//         comm = JSON.parse(pandit.communication || "[]");
+//     } catch {
+//       comm = [];
+//     }
+
 //     setFormData({
 //       name: pandit.name || "",
 //       expertise: pandit.expertise || "",
@@ -339,12 +407,16 @@
 //       temple_id: pandit.temple_id || "",
 //       type: pandit.type || "pandit",
 //       status: pandit.status || "active",
+
+//       is_free: pandit.is_free ?? 0,
+//       price_per_minute: pandit.price_per_minute ?? "",
+
+//       // ✅ NEW
+//       communication: comm,
 //     });
 
 //     if (pandit.image) {
-//       setImagePreview(
-//         `${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`
-//       );
+//       setImagePreview(`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`);
 //     } else {
 //       setImagePreview(null);
 //     }
@@ -353,7 +425,7 @@
 //   };
 
 //   /* ===============================
-//      STATUS TOGGLE ✅ (USE YOUR PATCH API)
+//      STATUS TOGGLE ✅
 //   =============================== */
 //   const handleStatusToggle = async (id, currentStatus) => {
 //     try {
@@ -391,19 +463,12 @@
 //     const fullStars = Math.floor(rating);
 
 //     for (let i = 0; i < fullStars; i++) {
-//       stars.push(
-//         <FaStar key={i} className="text-yellow-500 text-sm md:text-base" />
-//       );
+//       stars.push(<FaStar key={i} className="text-yellow-500 text-sm" />);
 //     }
 
 //     const emptyStars = 5 - stars.length;
 //     for (let i = 0; i < emptyStars; i++) {
-//       stars.push(
-//         <FaStar
-//           key={`empty-${i}`}
-//           className="text-gray-300 text-sm md:text-base"
-//         />
-//       );
+//       stars.push(<FaStar key={`empty-${i}`} className="text-gray-300 text-sm" />);
 //     }
 //     return stars;
 //   };
@@ -412,6 +477,22 @@
 //     if (!dateString) return "N/A";
 //     const date = new Date(dateString);
 //     return date.toLocaleDateString();
+//   };
+
+//   const formatCommunication = (comm) => {
+//     let arr = [];
+//     try {
+//       if (Array.isArray(comm)) arr = comm;
+//       else if (typeof comm === "string") arr = JSON.parse(comm || "[]");
+//     } catch {
+//       arr = [];
+//     }
+
+//     if (!arr.length) return "N/A";
+
+//     return arr
+//       .map((x) => x.toUpperCase())
+//       .join(", ");
 //   };
 
 //   useEffect(() => {
@@ -485,16 +566,16 @@
 //             )}
 //           </div>
 
-//           {/* Form fields (same as your current UI) */}
 //           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 //             {/* Left */}
 //             <div className="space-y-4">
+//               {/* Name */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Name <span className="text-red-500">*</span>
 //                 </label>
 //                 <div className="relative">
-//                   <FaUserTie className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//                   <FaUserTie className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 //                   <input
 //                     type="text"
 //                     name="name"
@@ -502,11 +583,12 @@
 //                     onChange={handleChange}
 //                     placeholder="Enter pandit name"
 //                     required
-//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                   />
 //                 </div>
 //               </div>
 
+//               {/* Type */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Type <span className="text-red-500">*</span>
@@ -519,7 +601,6 @@
 //                       value="pandit"
 //                       checked={formData.type === "pandit"}
 //                       onChange={handleChange}
-//                       className="text-orange-600"
 //                     />
 //                     <FaUserTie className="text-orange-500" />
 //                     <span>Pandit</span>
@@ -531,7 +612,6 @@
 //                       value="astro"
 //                       checked={formData.type === "astro"}
 //                       onChange={handleChange}
-//                       className="text-orange-600"
 //                     />
 //                     <GiAstronautHelmet className="text-purple-500" />
 //                     <span>Astrologer</span>
@@ -539,6 +619,7 @@
 //                 </div>
 //               </div>
 
+//               {/* Expertise */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Expertise <span className="text-red-500">*</span>
@@ -548,29 +629,28 @@
 //                   name="expertise"
 //                   value={formData.expertise}
 //                   onChange={handleChange}
-//                   placeholder="e.g., Vedic Rituals, Horoscope Reading"
+//                   placeholder="e.g., Vedic Rituals"
 //                   required
-//                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                 />
 //               </div>
 
+//               {/* Experience + Rating */}
 //               <div className="grid grid-cols-2 gap-4">
 //                 <div>
 //                   <label className="block text-sm font-medium text-gray-700 mb-1">
 //                     Experience (years) <span className="text-red-500">*</span>
 //                   </label>
 //                   <div className="relative">
-//                     <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//                     <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 //                     <input
 //                       type="number"
 //                       name="experience"
 //                       value={formData.experience}
 //                       onChange={handleChange}
-//                       placeholder="Years"
 //                       min="0"
-//                       max="100"
 //                       required
-//                       className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                       className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                     />
 //                   </div>
 //                 </div>
@@ -580,18 +660,17 @@
 //                     Rating (0-5) <span className="text-red-500">*</span>
 //                   </label>
 //                   <div className="relative">
-//                     <FaStar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//                     <FaStar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 //                     <input
 //                       type="number"
 //                       name="rating"
 //                       value={formData.rating}
 //                       onChange={handleChange}
-//                       placeholder="0.0 - 5.0"
 //                       min="0"
 //                       max="5"
 //                       step="0.1"
 //                       required
-//                       className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                       className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                     />
 //                   </div>
 //                   {formData.rating && (
@@ -604,21 +683,115 @@
 //                   )}
 //                 </div>
 //               </div>
+
+//               {/* ✅ NEW Communication Options */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Communication <span className="text-red-500">*</span>
+//                 </label>
+
+//                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+//                   <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+//                     <input
+//                       type="checkbox"
+//                       checked={formData.communication.includes("call")}
+//                       onChange={() => handleCommunicationChange("call")}
+//                     />
+//                     <FaPhoneAlt className="text-green-600" />
+//                     <span>Call</span>
+//                   </label>
+
+//                   <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+//                     <input
+//                       type="checkbox"
+//                       checked={formData.communication.includes("chat")}
+//                       onChange={() => handleCommunicationChange("chat")}
+//                     />
+//                     <FaComments className="text-blue-600" />
+//                     <span>Chat</span>
+//                   </label>
+
+//                   <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+//                     <input
+//                       type="checkbox"
+//                       checked={formData.communication.includes("offline")}
+//                       onChange={() => handleCommunicationChange("offline")}
+//                     />
+//                     <FaUserSlash className="text-gray-600" />
+//                     <span>Offline</span>
+//                   </label>
+//                 </div>
+//               </div>
+
+//               {/* Pricing */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Pricing Type <span className="text-red-500">*</span>
+//                 </label>
+
+//                 <div className="grid grid-cols-2 gap-3">
+//                   <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+//                     <input
+//                       type="radio"
+//                       name="is_free"
+//                       value="1"
+//                       checked={Number(formData.is_free) === 1}
+//                       onChange={handleChange}
+//                     />
+//                     <span className="font-semibold text-green-700">FREE</span>
+//                   </label>
+
+//                   <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+//                     <input
+//                       type="radio"
+//                       name="is_free"
+//                       value="0"
+//                       checked={Number(formData.is_free) === 0}
+//                       onChange={handleChange}
+//                     />
+//                     <span className="font-semibold text-orange-700">
+//                       Per Minute
+//                     </span>
+//                   </label>
+//                 </div>
+
+//                 {Number(formData.is_free) === 0 && (
+//                   <div className="mt-3">
+//                     <label className="block text-sm font-medium text-gray-700 mb-1">
+//                       Price Per Minute (₹) <span className="text-red-500">*</span>
+//                     </label>
+
+//                     <div className="relative">
+//                       <FaRupeeSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+//                       <input
+//                         type="number"
+//                         name="price_per_minute"
+//                         value={formData.price_per_minute}
+//                         onChange={handleChange}
+//                         placeholder="Enter price per minute"
+//                         min="1"
+//                         className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+//                       />
+//                     </div>
+//                   </div>
+//                 )}
+//               </div>
 //             </div>
 
 //             {/* Right */}
 //             <div className="space-y-4">
+//               {/* Temple */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Temple (Optional)
 //                 </label>
 //                 <div className="relative">
-//                   <FaBuilding className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//                   <FaBuilding className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 //                   <select
 //                     name="temple_id"
 //                     value={formData.temple_id}
 //                     onChange={handleChange}
-//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                     disabled={templesLoading}
 //                   >
 //                     <option value="">Select Temple (Optional)</option>
@@ -631,24 +804,26 @@
 //                 </div>
 //               </div>
 
+//               {/* Language */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Languages <span className="text-red-500">*</span>
 //                 </label>
 //                 <div className="relative">
-//                   <FaLanguage className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//                   <FaLanguage className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 //                   <input
 //                     type="text"
 //                     name="language"
 //                     value={formData.language}
 //                     onChange={handleChange}
-//                     placeholder="e.g., Hindi, English, Sanskrit"
+//                     placeholder="e.g., Hindi, English"
 //                     required
-//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                     className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                   />
 //                 </div>
 //               </div>
 
+//               {/* Image */}
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">
 //                   Profile Image
@@ -661,7 +836,7 @@
 //                       type="file"
 //                       accept="image/*"
 //                       onChange={handleImageChange}
-//                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+//                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
 //                     />
 //                     {imagePreview && (
 //                       <button
@@ -691,6 +866,7 @@
 //             </div>
 //           </div>
 
+//           {/* Buttons */}
 //           <div className="flex gap-3 md:gap-4 pt-4 border-t">
 //             <button
 //               type="submit"
@@ -825,21 +1001,35 @@
 
 //                 <div className="grid grid-cols-2 gap-3">
 //                   <div>
-//                     <span className="font-medium text-gray-700">
-//                       Experience:
-//                     </span>
+//                     <span className="font-medium text-gray-700">Experience:</span>
 //                     <p className="text-gray-800">
 //                       {formatExperience(hoveredPandit.experience)}
 //                     </p>
 //                   </div>
 //                   <div>
-//                     <span className="font-medium text-gray-700">
-//                       Availability:
-//                     </span>
+//                     <span className="font-medium text-gray-700">Availability:</span>
 //                     <p className="text-gray-800">
 //                       {hoveredPandit.is_available ? "Available" : "Busy"}
 //                     </p>
 //                   </div>
+//                 </div>
+
+//                 {/* ✅ NEW Communication in tooltip */}
+//                 <div className="pt-2 border-t">
+//                   <span className="font-medium text-gray-700">Communication:</span>
+//                   <p className="text-gray-800">
+//                     {formatCommunication(hoveredPandit.communication)}
+//                   </p>
+//                 </div>
+
+//                 {/* ✅ Pricing info */}
+//                 <div className="pt-2 border-t">
+//                   <span className="font-medium text-gray-700">Pricing:</span>
+//                   <p className="text-gray-800">
+//                     {hoveredPandit.is_free == 1
+//                       ? "FREE"
+//                       : `₹${hoveredPandit.price_per_minute}/min`}
+//                   </p>
 //                 </div>
 
 //                 <div className="flex justify-between items-center pt-2 border-t">
@@ -884,7 +1074,7 @@
 //             </div>
 //           ) : (
 //             <div className="overflow-x-auto -mx-4 md:mx-0">
-//               <table className="w-full border min-w-[1000px] md:min-w-0">
+//               <table className="w-full border min-w-[1200px] md:min-w-0">
 //                 <thead className="bg-gray-100">
 //                   <tr>
 //                     <th className="border p-2 text-xs md:text-sm">#</th>
@@ -896,6 +1086,13 @@
 //                     <th className="border p-2 text-xs md:text-sm">Experience</th>
 //                     <th className="border p-2 text-xs md:text-sm">Languages</th>
 //                     <th className="border p-2 text-xs md:text-sm">Rating</th>
+
+//                     {/* ✅ NEW */}
+//                     <th className="border p-2 text-xs md:text-sm">
+//                       Communication
+//                     </th>
+
+//                     <th className="border p-2 text-xs md:text-sm">Pricing</th>
 //                     <th className="border p-2 text-xs md:text-sm">Status</th>
 //                     <th className="border p-2 text-xs md:text-sm">Actions</th>
 //                     <th className="border p-2 text-xs md:text-sm">Details</th>
@@ -954,6 +1151,21 @@
 
 //                       <td className="border p-2 text-xs md:text-sm">
 //                         {pandit.rating}/5
+//                       </td>
+
+//                       {/* ✅ NEW */}
+//                       <td className="border p-2 text-xs md:text-sm">
+//                         {formatCommunication(pandit.communication)}
+//                       </td>
+
+//                       <td className="border p-2 text-xs md:text-sm font-semibold">
+//                         {pandit.is_free == 1 ? (
+//                           <span className="text-green-600">FREE</span>
+//                         ) : (
+//                           <span className="text-orange-600">
+//                             ₹{pandit.price_per_minute}/min
+//                           </span>
+//                         )}
 //                       </td>
 
 //                       <td className="border p-2">
@@ -1017,6 +1229,10 @@ import {
   FaBuilding,
   FaInfoCircle,
   FaRupeeSign,
+  FaPhoneAlt,
+  FaComments,
+  FaUserSlash,
+  FaTimes,
 } from "react-icons/fa";
 import { GiAstronautHelmet } from "react-icons/gi";
 import api from "../../../api/axios";
@@ -1040,17 +1256,30 @@ const AdminPandit = () => {
   const [loading, setLoading] = useState(false);
   const [templesLoading, setTemplesLoading] = useState(false);
 
+  // ✅ profile image
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+
+  // ✅ gallery images
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreview, setGalleryPreview] = useState([]);
+
+  // ✅ expertise list input
+  const [expertiseInput, setExpertiseInput] = useState("");
 
   const hoverTimeoutRef = useRef(null);
   const leaveTimeoutRef = useRef(null);
   const tooltipRef = useRef(null);
+
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    expertise: "",
+    expertise: "", // old single field (optional)
+    expertise_list: [], // ✅ NEW MULTI
+    about: "", // ✅ NEW ABOUT
+
     experience: "",
     language: "",
     rating: "",
@@ -1058,10 +1287,25 @@ const AdminPandit = () => {
     type: "pandit",
     status: "active",
 
-    // ✅ NEW
     is_free: 0,
     price_per_minute: "",
+
+    communication: [], // ["call","chat","offline"]
   });
+
+  /* ===============================
+     HELPERS ✅
+  =============================== */
+  const parseJsonArray = (value) => {
+    try {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") return JSON.parse(value);
+      return [];
+    } catch {
+      return [];
+    }
+  };
 
   /* ===============================
      FETCH ALL PANDITS ✅
@@ -1106,7 +1350,6 @@ const AdminPandit = () => {
     }
   };
 
-  /* ✅ RUN FETCH WHEN ACTIVE/INACTIVE CHANGES */
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
@@ -1114,7 +1357,6 @@ const AdminPandit = () => {
       fetchAllTemples();
       return;
     }
-
     fetchAllPandits();
   }, [showActive]);
 
@@ -1129,7 +1371,7 @@ const AdminPandit = () => {
     const viewportHeight = window.innerHeight;
 
     const tooltipWidth = 320;
-    const tooltipHeight = 300;
+    const tooltipHeight = 320;
 
     const spaceOnRight = viewportWidth - iconRect.right;
     const spaceOnLeft = iconRect.left;
@@ -1166,9 +1408,7 @@ const AdminPandit = () => {
       leaveTimeoutRef.current = null;
     }
 
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
 
     hoverTimeoutRef.current = setTimeout(() => {
       calculateTooltipPosition(e);
@@ -1235,8 +1475,43 @@ const AdminPandit = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ communication checkbox
+  const handleCommunicationChange = (option) => {
+    setFormData((prev) => {
+      const exists = prev.communication.includes(option);
+      return {
+        ...prev,
+        communication: exists
+          ? prev.communication.filter((x) => x !== option)
+          : [...prev.communication, option],
+      };
+    });
+  };
+
+  // ✅ add expertise chip
+  const addExpertise = () => {
+    const value = expertiseInput.trim();
+    if (!value) return;
+
+    setFormData((prev) => {
+      if (prev.expertise_list.includes(value)) return prev;
+      return { ...prev, expertise_list: [...prev.expertise_list, value] };
+    });
+
+    setExpertiseInput("");
+  };
+
+  // ✅ remove expertise chip
+  const removeExpertise = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      expertise_list: prev.expertise_list.filter((x) => x !== value),
+    }));
+  };
+
+  // ✅ profile image
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -1263,6 +1538,41 @@ const AdminPandit = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // ✅ gallery images (multiple)
+  const handleGalleryImagesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    for (let f of files) {
+      if (!validTypes.includes(f.type)) {
+        toast.error("Only JPEG/PNG/WebP allowed");
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        toast.error("Each image must be < 5MB");
+        return;
+      }
+    }
+
+    setGalleryFiles(files);
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setGalleryPreview(previews);
+  };
+
+  const removeGalleryImageByIndex = (idx) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== idx));
+    setGalleryPreview((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const resetGallery = () => {
+    setGalleryFiles([]);
+    setGalleryPreview([]);
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+  };
+
   /* ===============================
      SUBMIT FORM
   =============================== */
@@ -1271,13 +1581,24 @@ const AdminPandit = () => {
 
     if (
       !formData.name ||
-      !formData.expertise ||
       !formData.experience ||
       !formData.language ||
       !formData.rating ||
       !formData.type
     ) {
       toast.error("Please fill all required fields");
+      return;
+    }
+
+    // ✅ communication required
+    if (!formData.communication || formData.communication.length === 0) {
+      toast.error("Please select at least one Communication option");
+      return;
+    }
+
+    // ✅ expertise_list required
+    if (!formData.expertise_list || formData.expertise_list.length === 0) {
+      toast.error("Please add at least one Expertise (skill)");
       return;
     }
 
@@ -1291,7 +1612,7 @@ const AdminPandit = () => {
       return;
     }
 
-    // ✅ NEW PRICE VALIDATION
+    // ✅ paid validation
     if (Number(formData.is_free) === 0) {
       const priceNum = Number(formData.price_per_minute);
       if (!priceNum || priceNum <= 0) {
@@ -1303,11 +1624,39 @@ const AdminPandit = () => {
     try {
       const formDataToSend = new FormData();
 
-      Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, formData[key]);
-      });
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("experience", formData.experience);
+      formDataToSend.append("language", formData.language);
+      formDataToSend.append("rating", formData.rating);
+      formDataToSend.append("temple_id", formData.temple_id || "");
+      formDataToSend.append("type", formData.type);
 
+      formDataToSend.append("is_free", formData.is_free);
+      formDataToSend.append("price_per_minute", formData.price_per_minute);
+
+      // ✅ NEW
+      formDataToSend.append("about", formData.about || "");
+
+      // ✅ old optional single field
+      formDataToSend.append("expertise", formData.expertise || "");
+
+      // ✅ NEW arrays
+      formDataToSend.append(
+        "expertise_list",
+        JSON.stringify(formData.expertise_list)
+      );
+      formDataToSend.append(
+        "communication",
+        JSON.stringify(formData.communication)
+      );
+
+      // ✅ profile image
       if (imageFile) formDataToSend.append("image", imageFile);
+
+      // ✅ gallery images
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("images", file);
+      });
 
       let res;
 
@@ -1342,20 +1691,26 @@ const AdminPandit = () => {
     setFormData({
       name: "",
       expertise: "",
+      expertise_list: [],
+      about: "",
       experience: "",
       language: "",
       rating: "",
       temple_id: "",
       type: "pandit",
       status: "active",
-
-      // ✅ NEW
       is_free: 0,
       price_per_minute: "",
+      communication: [],
     });
+
+    setExpertiseInput("");
 
     setImageFile(null);
     setImagePreview(null);
+
+    resetGallery();
+
     setIsEditMode(false);
     setEditingId(null);
 
@@ -1367,26 +1722,38 @@ const AdminPandit = () => {
     setIsEditMode(true);
     setEditingId(pandit.id);
 
+    const comm = parseJsonArray(pandit.communication);
+    const expList = parseJsonArray(pandit.expertise_list);
+    const images = parseJsonArray(pandit.images);
+
     setFormData({
       name: pandit.name || "",
       expertise: pandit.expertise || "",
+      expertise_list: expList,
+      about: pandit.about || "",
       experience: pandit.experience || "",
       language: pandit.language || "",
       rating: pandit.rating || "",
       temple_id: pandit.temple_id || "",
       type: pandit.type || "pandit",
       status: pandit.status || "active",
-
-      // ✅ NEW
       is_free: pandit.is_free ?? 0,
       price_per_minute: pandit.price_per_minute ?? "",
+      communication: comm,
     });
 
+    // profile image preview
     if (pandit.image) {
       setImagePreview(`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`);
     } else {
       setImagePreview(null);
     }
+
+    // ✅ show already saved gallery images as preview (readonly)
+    setGalleryFiles([]); // no new uploads yet
+    setGalleryPreview(
+      images.map((img) => `${import.meta.env.VITE_BACKEND_FOR_URL}/${img}`)
+    );
 
     setImageFile(null);
   };
@@ -1427,7 +1794,7 @@ const AdminPandit = () => {
 
   const renderStars = (rating) => {
     const stars = [];
-    const fullStars = Math.floor(rating);
+    const fullStars = Math.floor(rating || 0);
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(<FaStar key={i} className="text-yellow-500 text-sm" />);
@@ -1435,12 +1802,7 @@ const AdminPandit = () => {
 
     const emptyStars = 5 - stars.length;
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <FaStar
-          key={`empty-${i}`}
-          className="text-gray-300 text-sm"
-        />
-      );
+      stars.push(<FaStar key={`empty-${i}`} className="text-gray-300 text-sm" />);
     }
     return stars;
   };
@@ -1449,6 +1811,18 @@ const AdminPandit = () => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString();
+  };
+
+  const formatCommunication = (comm) => {
+    const arr = parseJsonArray(comm);
+    if (!arr.length) return "N/A";
+    return arr.map((x) => x.toUpperCase()).join(", ");
+  };
+
+  const formatExpertiseList = (exp) => {
+    const arr = parseJsonArray(exp);
+    if (!arr.length) return "N/A";
+    return arr.join(", ");
   };
 
   useEffect(() => {
@@ -1522,7 +1896,6 @@ const AdminPandit = () => {
             )}
           </div>
 
-          {/* Form fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Left */}
             <div className="space-y-4">
@@ -1562,6 +1935,7 @@ const AdminPandit = () => {
                     <FaUserTie className="text-orange-500" />
                     <span>Pandit</span>
                   </label>
+
                   <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
@@ -1574,22 +1948,6 @@ const AdminPandit = () => {
                     <span>Astrologer</span>
                   </label>
                 </div>
-              </div>
-
-              {/* Expertise */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Expertise <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="expertise"
-                  value={formData.expertise}
-                  onChange={handleChange}
-                  placeholder="e.g., Vedic Rituals"
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
               </div>
 
               {/* Experience + Rating */}
@@ -1630,6 +1988,7 @@ const AdminPandit = () => {
                       className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
+
                   {formData.rating && (
                     <div className="flex items-center gap-1 mt-1">
                       {renderStars(parseFloat(formData.rating))}
@@ -1641,7 +2000,123 @@ const AdminPandit = () => {
                 </div>
               </div>
 
-              {/* ✅ NEW Pricing Section */}
+              {/* ✅ Languages */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Languages <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <FaLanguage className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    name="language"
+                    value={formData.language}
+                    onChange={handleChange}
+                    placeholder="e.g., Hindi, English"
+                    required
+                    className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+              </div>
+
+              {/* ✅ About */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  About (Introduction)
+                </label>
+                <textarea
+                  name="about"
+                  value={formData.about}
+                  onChange={handleChange}
+                  placeholder="Write about pandit/astro..."
+                  rows={5}
+                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+              </div>
+
+              {/* ✅ Multi Expertise Chips */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Expertise (Skills) <span className="text-red-500">*</span>
+                </label>
+
+                <div className="flex gap-2">
+                  <input
+                    value={expertiseInput}
+                    onChange={(e) => setExpertiseInput(e.target.value)}
+                    placeholder="Enter skill & press Add"
+                    className="flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={addExpertise}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {formData.expertise_list.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.expertise_list.map((skill) => (
+                      <span
+                        key={skill}
+                        className="flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-700 font-semibold"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeExpertise(skill)}
+                          className="text-orange-700 hover:text-red-600"
+                        >
+                          <FaTimes />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ✅ Communication */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Communication <span className="text-red-500">*</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.communication.includes("call")}
+                      onChange={() => handleCommunicationChange("call")}
+                    />
+                    <FaPhoneAlt className="text-green-600" />
+                    <span>Call</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.communication.includes("chat")}
+                      onChange={() => handleCommunicationChange("chat")}
+                    />
+                    <FaComments className="text-blue-600" />
+                    <span>Chat</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.communication.includes("offline")}
+                      onChange={() => handleCommunicationChange("offline")}
+                    />
+                    <FaUserSlash className="text-gray-600" />
+                    <span>Offline</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* ✅ Pricing */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Pricing Type <span className="text-red-500">*</span>
@@ -1723,26 +2198,7 @@ const AdminPandit = () => {
                 </div>
               </div>
 
-              {/* Language */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Languages <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <FaLanguage className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    name="language"
-                    value={formData.language}
-                    onChange={handleChange}
-                    placeholder="e.g., Hindi, English"
-                    required
-                    className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-              </div>
-
-              {/* Image */}
+              {/* Profile Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Profile Image
@@ -1777,6 +2233,63 @@ const AdminPandit = () => {
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ✅ Gallery Images */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gallery Images (Multiple)
+                </label>
+
+                <div className="space-y-3">
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryImagesChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+
+                  {galleryPreview.length > 0 && (
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm text-gray-600">Gallery Preview:</p>
+                        <button
+                          type="button"
+                          onClick={resetGallery}
+                          className="text-xs px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {galleryPreview.map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="relative w-full h-24 border rounded overflow-hidden"
+                          >
+                            <img
+                              src={img}
+                              alt={`gallery-${idx}`}
+                              className="w-full h-full object-cover"
+                            />
+
+                            {/* ✅ Remove preview if it is newly uploaded */}
+                            <button
+                              type="button"
+                              onClick={() => removeGalleryImageByIndex(idx)}
+                              className="absolute top-1 right-1 bg-white text-red-600 rounded-full p-1 shadow"
+                            >
+                              <FaTimes size={12} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1861,7 +2374,8 @@ const AdminPandit = () => {
                   <div className="w-16 h-16 rounded-full overflow-hidden">
                     {hoveredPandit.image ? (
                       <img
-                        src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPandit.image}`}
+                        src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPandit.image
+                          }`}
                         alt={hoveredPandit.name}
                         className="w-full h-full object-cover"
                       />
@@ -1871,6 +2385,7 @@ const AdminPandit = () => {
                       </div>
                     )}
                   </div>
+
                   <div>
                     <h3 className="font-bold text-base md:text-lg text-gray-800">
                       {hoveredPandit.name}
@@ -1897,6 +2412,7 @@ const AdminPandit = () => {
                       {getTempleName(hoveredPandit.temple_id)}
                     </p>
                   </div>
+
                   <div>
                     <span className="font-medium text-gray-700">Rating:</span>
                     <div className="flex items-center gap-1">
@@ -1909,8 +2425,12 @@ const AdminPandit = () => {
                 </div>
 
                 <div>
-                  <span className="font-medium text-gray-700">Expertise:</span>
-                  <p className="text-gray-800">{hoveredPandit.expertise}</p>
+                  <span className="font-medium text-gray-700">
+                    Expertise (List):
+                  </span>
+                  <p className="text-gray-800">
+                    {formatExpertiseList(hoveredPandit.expertise_list)}
+                  </p>
                 </div>
 
                 <div>
@@ -1937,7 +2457,15 @@ const AdminPandit = () => {
                   </div>
                 </div>
 
-                {/* ✅ NEW Pricing info in tooltip */}
+                <div className="pt-2 border-t">
+                  <span className="font-medium text-gray-700">
+                    Communication:
+                  </span>
+                  <p className="text-gray-800">
+                    {formatCommunication(hoveredPandit.communication)}
+                  </p>
+                </div>
+
                 <div className="pt-2 border-t">
                   <span className="font-medium text-gray-700">Pricing:</span>
                   <p className="text-gray-800">
@@ -1946,6 +2474,13 @@ const AdminPandit = () => {
                       : `₹${hoveredPandit.price_per_minute}/min`}
                   </p>
                 </div>
+
+                {hoveredPandit.about && (
+                  <div className="pt-2 border-t">
+                    <span className="font-medium text-gray-700">About:</span>
+                    <p className="text-gray-800">{hoveredPandit.about}</p>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="font-medium text-gray-700">Status:</span>
@@ -1989,7 +2524,7 @@ const AdminPandit = () => {
             </div>
           ) : (
             <div className="overflow-x-auto -mx-4 md:mx-0">
-              <table className="w-full border min-w-[1100px] md:min-w-0">
+              <table className="w-full border min-w-[1300px] md:min-w-0">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="border p-2 text-xs md:text-sm">#</th>
@@ -2001,10 +2536,13 @@ const AdminPandit = () => {
                     <th className="border p-2 text-xs md:text-sm">Experience</th>
                     <th className="border p-2 text-xs md:text-sm">Languages</th>
                     <th className="border p-2 text-xs md:text-sm">Rating</th>
-
-                    {/* ✅ NEW */}
+                    <th className="border p-2 text-xs md:text-sm">
+                      Expertise List
+                    </th>
+                    <th className="border p-2 text-xs md:text-sm">
+                      Communication
+                    </th>
                     <th className="border p-2 text-xs md:text-sm">Pricing</th>
-
                     <th className="border p-2 text-xs md:text-sm">Status</th>
                     <th className="border p-2 text-xs md:text-sm">Actions</th>
                     <th className="border p-2 text-xs md:text-sm">Details</th>
@@ -2025,7 +2563,8 @@ const AdminPandit = () => {
                         <div className="w-12 h-12 rounded-full overflow-hidden">
                           {pandit.image ? (
                             <img
-                              src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`}
+                              src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image
+                                }`}
                               alt={pandit.name}
                               className="w-full h-full object-cover"
                             />
@@ -2050,7 +2589,7 @@ const AdminPandit = () => {
                       </td>
 
                       <td className="border p-2 text-xs md:text-sm">
-                        {pandit.expertise}
+                        {pandit.expertise || "-"}
                       </td>
 
                       <td className="border p-2 text-xs md:text-sm">
@@ -2065,7 +2604,14 @@ const AdminPandit = () => {
                         {pandit.rating}/5
                       </td>
 
-                      {/* ✅ NEW PRICING */}
+                      <td className="border p-2 text-xs md:text-sm">
+                        {formatExpertiseList(pandit.expertise_list)}
+                      </td>
+
+                      <td className="border p-2 text-xs md:text-sm">
+                        {formatCommunication(pandit.communication)}
+                      </td>
+
                       <td className="border p-2 text-xs md:text-sm font-semibold">
                         {pandit.is_free == 1 ? (
                           <span className="text-green-600">FREE</span>

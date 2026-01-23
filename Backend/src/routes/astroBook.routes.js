@@ -1,12 +1,22 @@
 import express from "express";
 import { isAuthenticated } from "../middelware/auth.middleware.js";
 import {
-  createAstroBooking,
-  getAllAstroBookinByUser,
+  createAstroRazorpayOrder,
+  verifyAstroRazorpayAndBook,
 } from "../controller/astroBook.controller.js";
-const astroBookRoutes = express.Router();
 
-astroBookRoutes.post("/", isAuthenticated, createAstroBooking);
-astroBookRoutes.get("/", isAuthenticated, getAllAstroBookinByUser);
+const astroBookingRoutes = express.Router();
 
-export default astroBookRoutes;
+astroBookingRoutes.post(
+  "/razorpay/create-order",
+  isAuthenticated,
+  createAstroRazorpayOrder
+);
+
+astroBookingRoutes.post(
+  "/razorpay/verify",
+  isAuthenticated,
+  verifyAstroRazorpayAndBook
+);
+
+export default astroBookingRoutes;

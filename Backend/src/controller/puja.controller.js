@@ -3,12 +3,112 @@ import db from "../utils/db.js";
 import { getPagination } from "../utils/pagination.js";
 import fs from "fs"
 
+// export const createPuja = async (req, res) => {
+//   if (req?.user?.role !== "admin") {
+//     return res.status(403).json({
+//       success: false,
+//       message: "Access denied: Admin only",
+//     });
+//   }
+
+//   const connection = await db.promise().getConnection();
+
+//   try {
+//     const {
+//       temple_id,
+//       puja_category_id,
+//       name,
+//       price,
+//       duration_minutes,
+//       slot,
+//       puja_date,
+//       start_time,
+//       description
+//     } = req.body;
+
+//     const timeInA24Hours = convertTo24Hour(start_time);
+//     // ✅ Multer file path
+//     const image = req.file ? req.file.path : null;
+
+//     if (
+//       !temple_id ||
+//       !puja_category_id ||
+//       !name ||
+//       !price ||
+//       !duration_minutes ||
+//       !slot ||
+//       !description
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Required fields are missing",
+//       });
+//     }
+
+//     await connection.beginTransaction();
+
+//     // Check for duplicate active puja name in same temple and category
+//     const [existing] = await connection.execute(
+//       `SELECT id FROM puja 
+//        WHERE temple_id = ? 
+//        AND puja_category_id = ? 
+//        AND name = ? 
+//        AND status = 'active'`,
+//       [temple_id, puja_category_id, name.trim()]
+//     );
+
+//     if (existing.length > 0) {
+//       await connection.rollback();
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Puja with this name already exists in this temple and category",
+//       });
+//     }
+
+//     const insertQuery = `
+//       INSERT INTO puja 
+//       (temple_id, puja_category_id, name, price, duration, slot, puja_date, start_time, status,image,description)
+//       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active',?,?)
+//     `;
+
+//     await connection.execute(insertQuery, [
+//       temple_id,
+//       puja_category_id,
+//       name.trim(),
+//       price,
+//       duration_minutes,
+//       slot,
+//       puja_date || null,
+//       timeInA24Hours,
+//       image,
+//       description
+
+//     ]);
+
+//     await connection.commit();
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Puja created successfully",
+//     });
+//   } catch (error) {
+//     await connection.rollback();
+
+//     console.error("Create Puja Error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to create puja",
+//     });
+//   } finally {
+//     connection.release();
+//   }
+// };
+
 export const createPuja = async (req, res) => {
   if (req?.user?.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Access denied: Admin only",
-    });
+    return res.status(403).json({ success: false, message: "Access denied: Admin only" });
   }
 
   const connection = await db.promise().getConnection();
@@ -23,53 +123,67 @@ export const createPuja = async (req, res) => {
       slot,
       puja_date,
       start_time,
-      description
+      description,
+
+      // ✅ NEW
+      schedule_type,
+      schedule_days,
     } = req.body;
 
     const timeInA24Hours = convertTo24Hour(start_time);
-    // ✅ Multer file path
     const image = req.file ? req.file.path : null;
 
-    if (
-      !temple_id ||
-      !puja_category_id ||
-      !name ||
-      !price ||
-      !duration_minutes ||
-      !slot ||
-      !description
-    ) {
+    if (!temple_id || !puja_category_id || !name || !price || !duration_minutes || !slot || !description) {
+      return res.status(400).json({ success: false, message: "Required fields are missing" });
+    }
+
+    // ✅ validate schedule_type
+    const scheduleType = schedule_type || "date";
+    if (!["date", "daily", "weekly"].includes(scheduleType)) {
+      return res.status(400).json({ success: false, message: "Invalid schedule_type" });
+    }
+
+    // ✅ validate days
+    let daysArray = [];
+    if (scheduleType === "weekly") {
+      try {
+        daysArray = schedule_days ? JSON.parse(schedule_days) : [];
+      } catch {
+        return res.status(400).json({ success: false, message: "schedule_days must be valid JSON array" });
+      }
+
+      const allowed = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const ok =
+        Array.isArray(daysArray) &&
+        daysArray.length > 0 &&
+        daysArray.every((d) => allowed.includes(d));
+
+      if (!ok) {
+        return res.status(400).json({
+          success: false,
+          message: "schedule_days must contain days like ['mon','wed']",
+        });
+      }
+    }
+
+    // ✅ for date type puja_date required
+    if (scheduleType === "date" && !puja_date) {
       return res.status(400).json({
         success: false,
-        message: "Required fields are missing",
+        message: "puja_date is required when schedule_type is 'date'",
       });
     }
 
     await connection.beginTransaction();
 
-    // Check for duplicate active puja name in same temple and category
-    const [existing] = await connection.execute(
-      `SELECT id FROM puja 
-       WHERE temple_id = ? 
-       AND puja_category_id = ? 
-       AND name = ? 
-       AND status = 'active'`,
-      [temple_id, puja_category_id, name.trim()]
-    );
-
-    if (existing.length > 0) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message:
-          "Puja with this name already exists in this temple and category",
-      });
-    }
-
     const insertQuery = `
-      INSERT INTO puja 
-      (temple_id, puja_category_id, name, price, duration, slot, puja_date, start_time, status,image,description)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active',?,?)
+      INSERT INTO puja
+      (
+        temple_id, puja_category_id, name, price, duration, slot,
+        puja_date, start_time, status, image, description,
+        schedule_type, schedule_days
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)
     `;
 
     await connection.execute(insertQuery, [
@@ -79,28 +193,21 @@ export const createPuja = async (req, res) => {
       price,
       duration_minutes,
       slot,
-      puja_date || null,
+      scheduleType === "date" ? puja_date : null,
       timeInA24Hours,
       image,
-      description
-
+      description,
+      scheduleType,
+      scheduleType === "weekly" ? JSON.stringify(daysArray) : null,
     ]);
 
     await connection.commit();
 
-    return res.status(201).json({
-      success: true,
-      message: "Puja created successfully",
-    });
+    return res.status(201).json({ success: true, message: "Puja created successfully" });
   } catch (error) {
     await connection.rollback();
-
     console.error("Create Puja Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create puja",
-    });
+    return res.status(500).json({ success: false, message: "Failed to create puja" });
   } finally {
     connection.release();
   }
@@ -201,13 +308,185 @@ export const getAllPuja = async (req, res) => {
   }
 };
 
+// export const updatePuja = async (req, res) => {
+//   if (req?.user?.role !== "admin") {
+//     return res.status(403).json({
+//       success: false,
+//       message: "Access denied: Admin only",
+//     });
+//   }
+
+//   const connection = await db.promise().getConnection();
+
+//   try {
+//     const {
+//       temple_id,
+//       puja_category_id,
+//       name,
+//       price,
+//       duration_minutes,
+//       slot,
+//       puja_date,
+//       start_time,
+//       status,
+//       description
+//     } = req.body;
+//     const { id } = req.params;
+
+//     if (!id || isNaN(parseInt(id))) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Valid puja ID is required",
+//       });
+//     }
+
+//     if (
+//       !temple_id ||
+//       !puja_category_id ||
+//       !name ||
+//       !price ||
+//       !duration_minutes ||
+//       !slot ||
+//       !description
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Required fields are missing",
+//       });
+//     }
+
+//     // Validate status if provided
+//     if (status && !["active", "inactive"].includes(status)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Status must be either 'active' or 'inactive'",
+//       });
+//     }
+
+//     const timeInA24Hours = convertTo24Hour(start_time);
+
+//     await connection.beginTransaction();
+
+//     // First, check if puja exists
+//     const [checkRows] = await connection.execute(
+//       "SELECT * FROM puja WHERE id = ?",
+//       [id]
+//     );
+
+//     if (checkRows.length === 0) {
+//       await connection.rollback();
+//       return res.status(404).json({
+//         success: false,
+//         message: "Puja not found",
+//       });
+//     }
+
+//     const currentPuja = checkRows[0];
+
+//     // Check for duplicate name ONLY IF name is being changed AND puja is active
+//     if (
+//       (name.trim() !== currentPuja.name ||
+//         temple_id != currentPuja.temple_id ||
+//         puja_category_id != currentPuja.puja_category_id) &&
+//       status !== "inactive"
+//     ) {
+//       // Check for duplicate active puja name in same temple and category
+//       const [duplicateRows] = await connection.execute(
+//         `SELECT id FROM puja 
+//          WHERE temple_id = ? 
+//          AND puja_category_id = ? 
+//          AND name = ? 
+//          AND status = 'active' 
+//          AND id != ?`,
+//         [temple_id, puja_category_id, name.trim(), id]
+//       );
+
+//       if (duplicateRows.length > 0) {
+//         await connection.rollback();
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             "Puja with this name already exists in this temple and category",
+//         });
+//       }
+//     }
+
+
+//     // ✅ if new image uploaded
+//     let newImagePath = currentPuja.image;
+//     if (req.file) {
+//       newImagePath = req.file.path;
+
+//       // ✅ delete old image file
+//       if (currentPuja.image && fs.existsSync(currentPuja.image)) {
+//         fs.unlinkSync(currentPuja.image);
+//       }
+//     }
+
+//     const updateQuery = `
+//       UPDATE puja
+//       SET
+//         temple_id = ?,
+//         puja_category_id = ?,
+//         name = ?,
+//         image = ?,
+//         price = ?,
+//         duration = ?,
+//         slot = ?,
+//         puja_date = ?,
+//         start_time = ?,
+//         status = ?,
+//         description=?,
+//         updated_at = CURRENT_TIMESTAMP
+//       WHERE id = ?
+//     `;
+
+//     const [result] = await connection.execute(updateQuery, [
+//       temple_id,
+//       puja_category_id,
+//       name.trim(),
+//       newImagePath, // ✅ update image
+//       price,
+//       duration_minutes,
+//       slot,
+//       puja_date || null,
+//       timeInA24Hours,
+//       status || "active",
+//       description,
+//       id,
+//     ]);
+
+//     if (result.affectedRows === 0) {
+//       await connection.rollback();
+//       return res.status(404).json({
+//         success: false,
+//         message: "Puja not found",
+//       });
+//     }
+
+//     await connection.commit();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Puja updated successfully",
+//     });
+//   } catch (error) {
+//     await connection.rollback();
+
+//     console.error("Update Puja Error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to update puja",
+//     });
+//   } finally {
+//     connection.release();
+//   }
+// };
 
 export const updatePuja = async (req, res) => {
   if (req?.user?.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Access denied: Admin only",
-    });
+    return res.status(403).json({ success: false, message: "Access denied: Admin only" });
   }
 
   const connection = await db.promise().getConnection();
@@ -223,37 +502,54 @@ export const updatePuja = async (req, res) => {
       puja_date,
       start_time,
       status,
-      description
+      description,
+
+      // ✅ NEW
+      schedule_type,
+      schedule_days,
     } = req.body;
+
     const { id } = req.params;
 
-    if (!id || isNaN(parseInt(id))) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid puja ID is required",
-      });
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({ success: false, message: "Valid puja ID is required" });
     }
 
-    if (
-      !temple_id ||
-      !puja_category_id ||
-      !name ||
-      !price ||
-      !duration_minutes ||
-      !slot ||
-      !description
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields are missing",
-      });
+    if (!temple_id || !puja_category_id || !name || !price || !duration_minutes || !slot || !description) {
+      return res.status(400).json({ success: false, message: "Required fields are missing" });
     }
 
-    // Validate status if provided
-    if (status && !["active", "inactive"].includes(status)) {
+    const scheduleType = schedule_type || "date";
+    if (!["date", "daily", "weekly"].includes(scheduleType)) {
+      return res.status(400).json({ success: false, message: "Invalid schedule_type" });
+    }
+
+    let daysArray = [];
+    if (scheduleType === "weekly") {
+      try {
+        daysArray = schedule_days ? JSON.parse(schedule_days) : [];
+      } catch {
+        return res.status(400).json({ success: false, message: "schedule_days must be valid JSON array" });
+      }
+
+      const allowed = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const ok =
+        Array.isArray(daysArray) &&
+        daysArray.length > 0 &&
+        daysArray.every((d) => allowed.includes(d));
+
+      if (!ok) {
+        return res.status(400).json({
+          success: false,
+          message: "schedule_days must contain days like ['mon','wed']",
+        });
+      }
+    }
+
+    if (scheduleType === "date" && !puja_date) {
       return res.status(400).json({
         success: false,
-        message: "Status must be either 'active' or 'inactive'",
+        message: "puja_date is required when schedule_type is 'date'",
       });
     }
 
@@ -261,57 +557,18 @@ export const updatePuja = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // First, check if puja exists
-    const [checkRows] = await connection.execute(
-      "SELECT * FROM puja WHERE id = ?",
-      [id]
-    );
-
-    if (checkRows.length === 0) {
+    const [checkRows] = await connection.execute("SELECT * FROM puja WHERE id = ?", [id]);
+    if (!checkRows.length) {
       await connection.rollback();
-      return res.status(404).json({
-        success: false,
-        message: "Puja not found",
-      });
+      return res.status(404).json({ success: false, message: "Puja not found" });
     }
 
     const currentPuja = checkRows[0];
 
-    // Check for duplicate name ONLY IF name is being changed AND puja is active
-    if (
-      (name.trim() !== currentPuja.name ||
-        temple_id != currentPuja.temple_id ||
-        puja_category_id != currentPuja.puja_category_id) &&
-      status !== "inactive"
-    ) {
-      // Check for duplicate active puja name in same temple and category
-      const [duplicateRows] = await connection.execute(
-        `SELECT id FROM puja 
-         WHERE temple_id = ? 
-         AND puja_category_id = ? 
-         AND name = ? 
-         AND status = 'active' 
-         AND id != ?`,
-        [temple_id, puja_category_id, name.trim(), id]
-      );
-
-      if (duplicateRows.length > 0) {
-        await connection.rollback();
-        return res.status(400).json({
-          success: false,
-          message:
-            "Puja with this name already exists in this temple and category",
-        });
-      }
-    }
-
-
-    // ✅ if new image uploaded
+    // ✅ image handling
     let newImagePath = currentPuja.image;
     if (req.file) {
       newImagePath = req.file.path;
-
-      // ✅ delete old image file
       if (currentPuja.image && fs.existsSync(currentPuja.image)) {
         fs.unlinkSync(currentPuja.image);
       }
@@ -330,49 +587,37 @@ export const updatePuja = async (req, res) => {
         puja_date = ?,
         start_time = ?,
         status = ?,
-        description=?,
+        description = ?,
+        schedule_type = ?,
+        schedule_days = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
-    const [result] = await connection.execute(updateQuery, [
+    await connection.execute(updateQuery, [
       temple_id,
       puja_category_id,
       name.trim(),
-      newImagePath, // ✅ update image
+      newImagePath,
       price,
       duration_minutes,
       slot,
-      puja_date || null,
+      scheduleType === "date" ? puja_date : null,
       timeInA24Hours,
       status || "active",
       description,
+      scheduleType,
+      scheduleType === "weekly" ? JSON.stringify(daysArray) : null,
       id,
     ]);
 
-    if (result.affectedRows === 0) {
-      await connection.rollback();
-      return res.status(404).json({
-        success: false,
-        message: "Puja not found",
-      });
-    }
-
     await connection.commit();
 
-    return res.status(200).json({
-      success: true,
-      message: "Puja updated successfully",
-    });
+    return res.status(200).json({ success: true, message: "Puja updated successfully" });
   } catch (error) {
     await connection.rollback();
-
     console.error("Update Puja Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update puja",
-    });
+    return res.status(500).json({ success: false, message: "Failed to update puja" });
   } finally {
     connection.release();
   }

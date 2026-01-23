@@ -24,9 +24,13 @@ export default function PujaCheckout() {
 
     const [whatsappNumber, setWhatsappNumber] = useState("");
 
-    const [devotees, setDevotees] = useState([
-        { name: "", gotra: "" },
-    ]);
+    // const [devotees, setDevotees] = useState([
+    //     { name: "", gotra: "" },
+    // ]);
+
+    const [gotra, setGotra] = useState("");
+    const [devotees, setDevotees] = useState([{ name: "" }]);
+
 
     const fixImageUrl = (imgPath) => {
         if (!imgPath) return "/no-image.png";
@@ -65,21 +69,37 @@ export default function PujaCheckout() {
     }, [id]);
 
     // ✅ Reset devotees count when package changes
+    // useEffect(() => {
+    //     setDevotees((prev) => {
+    //         const next = [...prev];
+
+    //         if (next.length < peopleCount) {
+    //             for (let i = next.length; i < peopleCount; i++) {
+    //                 next.push({ name: "", gotra: "" });
+    //             }
+    //         } else if (next.length > peopleCount) {
+    //             next.length = peopleCount;
+    //         }
+
+    //         return next;
+    //     });
+    // }, [peopleCount]);
+
     useEffect(() => {
         setDevotees((prev) => {
             const next = [...prev];
 
             if (next.length < peopleCount) {
                 for (let i = next.length; i < peopleCount; i++) {
-                    next.push({ name: "", gotra: "" });
+                    next.push({ name: "" });
                 }
             } else if (next.length > peopleCount) {
                 next.length = peopleCount;
             }
-
             return next;
         });
     }, [peopleCount]);
+
 
     const subtotal = useMemo(() => {
         if (!puja) return 0;
@@ -90,13 +110,21 @@ export default function PujaCheckout() {
     const platformFee = 10;
     const total = subtotal + tax + platformFee;
 
-    const updateDevotee = (index, key, value) => {
+    // const updateDevotee = (index, key, value) => {
+    //     setDevotees((prev) =>
+    //         prev.map((d, i) => (i === index ? { ...d, [key]: value } : d))
+    //     );
+    // };
+
+    // ✅ Pay Now
+
+    const updateDevotee = (index, value) => {
         setDevotees((prev) =>
-            prev.map((d, i) => (i === index ? { ...d, [key]: value } : d))
+            prev.map((d, i) => (i === index ? { ...d, name: value } : d))
         );
     };
 
-    // ✅ Pay Now
+
     const handlePayNow = async () => {
         try {
             if (!puja) return;
@@ -106,25 +134,29 @@ export default function PujaCheckout() {
                 return;
             }
 
-            // ✅ validate devotees
+            if (!gotra.trim()) {
+                alert("Please enter Gotra");
+                return;
+            }
+
             for (let i = 0; i < devotees.length; i++) {
-                if (!devotees[i].name.trim() || !devotees[i].gotra.trim()) {
-                    alert(`Please fill devotee ${i + 1} name and gotra`);
+                if (!devotees[i].name.trim()) {
+                    alert(`Please fill devotee ${i + 1} name`);
                     return;
                 }
             }
 
-            // ✅ build devotee payload
+
             const devoteesPayload = devotees.map((d, idx) => ({
                 person_no: idx + 1,
                 name: d.name.trim(),
-                gotra: d.gotra.trim(),
             }));
 
             const payload = {
                 puja_id: puja.id,
                 package_type: packageType,
                 people_count: peopleCount,
+                gotra: gotra.trim(),
                 devotees: devoteesPayload,
                 total_amount: total,
                 whatsapp_number: whatsappNumber,
@@ -276,35 +308,31 @@ export default function PujaCheckout() {
 
                         <div className="space-y-3">
                             {devotees.map((d, index) => (
-                                <div
-                                    key={index}
-                                    className="border rounded-lg p-3 bg-gray-50"
-                                >
-                                    <p className="text-sm font-medium mb-2">
-                                        Person {index + 1}
-                                    </p>
+                                <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                                    <p className="text-sm font-medium mb-2">Person {index + 1}</p>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <input
-                                            value={d.name}
-                                            onChange={(e) =>
-                                                updateDevotee(index, "name", e.target.value)
-                                            }
-                                            placeholder="Full Name"
-                                            className="border px-3 py-2 rounded-lg"
-                                        />
-                                        <input
-                                            value={d.gotra}
-                                            onChange={(e) =>
-                                                updateDevotee(index, "gotra", e.target.value)
-                                            }
-                                            placeholder="Gotra"
-                                            className="border px-3 py-2 rounded-lg"
-                                        />
-                                    </div>
+                                    <input
+                                        value={d.name}
+                                        onChange={(e) => updateDevotee(index, e.target.value)}
+                                        placeholder="Full Name"
+                                        className="w-full border px-3 py-2 rounded-lg"
+                                    />
                                 </div>
                             ))}
                         </div>
+
+                        {/* ✅ GOTRA (ONLY ONCE) */}
+                        <div className="mt-5">
+                            <h3 className="font-semibold text-gray-800 mb-2">Gotra (Only One Time)</h3>
+                            <input
+                                value={gotra}
+                                onChange={(e) => setGotra(e.target.value)}
+                                placeholder="Enter Gotra"
+                                className="w-full border px-3 py-2 rounded-lg"
+                            />
+                        </div>
+
+
                     </div>
                 </div>
 

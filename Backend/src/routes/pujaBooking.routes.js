@@ -1,15 +1,3 @@
-// import express from "express";
-// import {
-//   createPujaBooking,
-//   getAllPujaBookingByUser,
-// } from "../controller/pujaBooking.controller.js";
-// import { isAuthenticated } from "../middelware/auth.middleware.js";
-// const pujaBookRoutes = express.Router();
-
-// pujaBookRoutes.post("/", isAuthenticated, createPujaBooking);
-// pujaBookRoutes.get("/", isAuthenticated, getAllPujaBookingByUser);
-
-// export default pujaBookRoutes;
 
 
 import express from "express";

@@ -327,7 +327,7 @@ export const replaceGuestIdToUserId = async (req, res) => {
   const connection = await db.promise().getConnection();
 
   try {
-    const guestId = req.params.id; // ✅ from URL param
+    const guestId = req.params.id;
     const userId = req.user?.id;
 
     if (!guestId) {
@@ -346,19 +346,62 @@ export const replaceGuestIdToUserId = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // ✅ Move guest cart to user cart
-    const updateQuery = `
-      UPDATE product_cart 
-      SET user_id = ?, guest_id = NULL, updated_at = NOW()
-      WHERE guest_id = ?
-    `;
+    // ✅ 1) Get all guest cart items
+    const [guestItems] = await connection.execute(
+      `SELECT id, product_id, quantity 
+       FROM product_cart 
+       WHERE guest_id = ?`,
+      [guestId]
+    );
 
-    await connection.execute(updateQuery, [userId, guestId]);
+    // ✅ if nothing in guest cart, just return
+    if (!guestItems.length) {
+      await connection.commit();
+      return res.status(200).json({
+        message: "Guest cart is empty",
+        success: true,
+      });
+    }
+
+    // ✅ 2) Loop each guest item
+    for (const item of guestItems) {
+      // check if user already has same product
+      const [userCart] = await connection.execute(
+        `SELECT id, quantity 
+         FROM product_cart 
+         WHERE user_id = ? AND product_id = ?`,
+        [userId, item.product_id]
+      );
+
+      if (userCart.length > 0) {
+        // ✅ Already exists => merge quantity
+        await connection.execute(
+          `UPDATE product_cart 
+           SET quantity = quantity + ?, updated_at = NOW()
+           WHERE id = ?`,
+          [item.quantity, userCart[0].id]
+        );
+
+        // ✅ delete guest row (because merged)
+        await connection.execute(
+          `DELETE FROM product_cart WHERE id = ?`,
+          [item.id]
+        );
+      } else {
+        // ✅ Not exists => move guest row to user
+        await connection.execute(
+          `UPDATE product_cart
+           SET user_id = ?, guest_id = NULL, updated_at = NOW()
+           WHERE id = ?`,
+          [userId, item.id]
+        );
+      }
+    }
 
     await connection.commit();
 
     return res.status(200).json({
-      message: "Guest cart moved to user successfully",
+      message: "Guest cart merged into user cart successfully ✅",
       success: true,
     });
   } catch (error) {
@@ -373,3 +416,4 @@ export const replaceGuestIdToUserId = async (req, res) => {
     connection.release();
   }
 };
+

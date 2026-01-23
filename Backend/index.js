@@ -8,8 +8,6 @@ import pujaCategory from "./src/routes/puja-category.routes.js";
 import pujaRoutes from "./src/routes/puja.routes.js";
 import panditRoutes from "./src/routes/pandit.routes.js";
 import path from "path";
-// import pujaBookRoutes from "./src/routes/pujaBooking.routes.js";
-import astroBookRoutes from "./src/routes/astroBook.routes.js";
 import productRoutes from "./src/routes/product.routes.js";
 import productCategoryRoutes from "./src/routes/productCategory.routes.js";
 import addToCardRoutes from "./src/routes/addToCard.routes.js";
@@ -22,8 +20,7 @@ import { getOrCreateConversation, saveMessage } from "./src/controller/chat.cont
 import addressRoutes from "./src/routes/address.routes.js";
 import productBookingRoutes from "./src/routes/productBooking.routes.js";
 import pujaBookingRoutes from "./src/routes/pujaBooking.routes.js";
-
-// import panditAvailableRoutes from "./src/routes/panditAvailable.routes.js";
+import astroBookingRoutes from "./src/routes/astroBook.routes.js";
 dotenv.config();
 const app = express();
 
@@ -52,8 +49,7 @@ app.use("/api/temple", templeRoutes);
 app.use("/api/puja-category", pujaCategory);
 app.use("/api/puja", pujaRoutes);
 app.use("/api/pandit", panditRoutes);
-// app.use("/api/puja-book", pujaBookRoutes);
-app.use("/api/astro-book", astroBookRoutes);
+app.use("/api/astro-booking", astroBookingRoutes);
 app.use("/api/product-category", productCategoryRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/product-addtocard", addToCardRoutes);
@@ -63,7 +59,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/product-booking", productBookingRoutes);
 app.use("/api/puja-booking", pujaBookingRoutes);
-// app.use("/api/pandit-availability", panditAvailableRoutes);
+
 
 ///!SECTION for image get
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

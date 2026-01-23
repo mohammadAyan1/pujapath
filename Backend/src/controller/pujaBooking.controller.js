@@ -1,100 +1,3 @@
-// import db from "../utils/db.js";
-
-// export const createPujaBooking = async (req, res) => {
-//   const connection = await db.promise().getConnection();
-
-//   try {
-//     const { puja_id, payment_id, devotees } = req.body;
-//     const user_id = req?.user?.id;
-
-//     if (!user_id) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "User must be logged in",
-//       });
-//     }
-
-//     if (!puja_id || !devotees) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Required fields are missing",
-//       });
-//     }
-
-//     const devoteesJSON = JSON.stringify(devotees);
-
-//     await connection.beginTransaction();
-
-//     const insertQuery = `
-//       INSERT INTO puja_booking
-//       (puja_id, user_id, devotees, payment_id)
-//       VALUES (?, ?, ?, ?)
-//     `;
-
-//     await connection.execute(insertQuery, [
-//       puja_id,
-//       user_id,
-//       devoteesJSON,
-//       payment_id || null,
-//     ]);
-
-//     await connection.commit();
-
-//     return res.status(201).json({
-//       success: true,
-//       message: "Booking created successfully",
-//     });
-//   } catch (error) {
-//     try {
-//       await connection.rollback();
-//     } catch (_) { }
-
-//     console.error("Create Booking Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to create Booking",
-//     });
-//   } finally {
-//     connection.release();
-//   }
-// };
-
-// export const getAllPujaBookingByUser = async (req, res) => {
-//   const connection = db.promise();
-
-//   try {
-//     const user_id = req?.user?.id;
-
-//     if (!user_id) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "User must be logged in",
-//       });
-//     }
-
-//     const [rows] = await connection.execute(
-//       `
-//       SELECT *
-//       FROM puja_booking
-//       WHERE user_id = ?
-//       ORDER BY created_at DESC
-//       `,
-//       [user_id],
-//     );
-
-//     return res.status(200).json({
-//       success: true,
-//       count: rows.length,
-//       data: rows,
-//     });
-//   } catch (error) {
-//     console.error("Get All Puja Booking Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch Puja Booking",
-//     });
-//   }
-// };
 
 
 import Razorpay from "razorpay";
@@ -242,6 +145,16 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
+    // if (!Array.isArray(devotees) || devotees.length !== Number(people_count)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Devotees must match people_count",
+    //   });
+    // }
+
+    // ✅ Verify signature
+
+
     if (!Array.isArray(devotees) || devotees.length !== Number(people_count)) {
       return res.status(400).json({
         success: false,
@@ -249,7 +162,14 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
       });
     }
 
-    // ✅ Verify signature
+    if (!req.body.gotra || !req.body.gotra.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Gotra is required",
+      });
+    }
+
+
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -289,14 +209,43 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
       )
     `;
 
+    // const metaData = JSON.stringify({
+    //   puja_id,
+    //   package_type,
+    //   people_count,
+    //   devotees,
+    //   total_amount,
+    //   whatsapp_number
+    // });
+
     const metaData = JSON.stringify({
-      puja_id,
+      booking_type: "puja",
+
+      puja: {
+        id: puja.id,
+        name: puja.name,
+        temple_id: puja.temple_id,
+        puja_category_id: puja.puja_category_id,
+        price: puja.price,
+        duration: puja.duration,
+        slot: puja.slot,
+        puja_date: puja.puja_date,
+        start_time: puja.start_time,
+        schedule_type: puja.schedule_type,
+        schedule_days: puja.schedule_days,
+        image: puja.image,
+        description: puja.description,
+      },
+
       package_type,
       people_count,
+      gotra: req.body.gotra,
       devotees,
       total_amount,
-      whatsapp_number
+      whatsapp_number,
     });
+
+
 
     const [payResult] = await connection.execute(insertPaymentQuery, [
       userId,
@@ -309,12 +258,34 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
 
     const paymentId = payResult.insertId;
 
+    // const devoteesJson = JSON.stringify({
+    //   whatsapp_number,
+    //   devotees,
+    // });
+
+    // ✅ Insert puja booking
+
+
     const devoteesJson = JSON.stringify({
       whatsapp_number,
+      gotra: req.body.gotra,
+
+      puja: {
+        id: puja.id,
+        name: puja.name,
+        price: puja.price,
+        duration: puja.duration,
+        start_time: puja.start_time,
+        puja_date: puja.puja_date,
+        schedule_type: puja.schedule_type,
+        schedule_days: puja.schedule_days,
+        image: puja.image,
+      },
+
       devotees,
     });
 
-    // ✅ Insert puja booking
+
     const insertBookingQuery = `
       INSERT INTO puja_booking
       (puja_id, user_id, devotees, payment_id, status, created_at, updated_at)

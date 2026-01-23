@@ -24,6 +24,7 @@ import Cart from "../pages/Cart/Cart";
 import Pandit from "../pages/Pandit/Pandit";
 import Temple from "../components/Temple/Temple";
 import PujaCheckout from "../components/PujaCheckout/PujaCheckout";
+import AstroCheckout from "../components/AstroCheckout/AstroCheckout";
 const AppRoutes = ({ heroClose }) => {
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
@@ -55,6 +56,8 @@ const AppRoutes = ({ heroClose }) => {
           <Route path="/pandit" element={<Pandit />} />
           <Route path="/temple" element={<Temple />} />
           <Route path="/puja-checkout/:id" element={<PujaCheckout />} />
+          <Route path="/astro-checkout/:id" element={<AstroCheckout />} />
+
 
         </Routes>
       </main>

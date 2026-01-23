@@ -23,7 +23,7 @@ function App() {
   useEffect(() => {
     fetchUserDetails();
 
-    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/chat") || location.pathname.startsWith("/checkout") || location.pathname.startsWith("/cart") || location.pathname.startsWith("/login")) {
+    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/chat") || location.pathname.startsWith("/checkout") || location.pathname.startsWith("/puja-checkout") || location.pathname.startsWith("/astro-checkout") || location.pathname.startsWith("/cart") || location.pathname.startsWith("/login")) {
       setHeroClose(false);
     } else {
       setHeroClose(true);
