@@ -4,7 +4,7 @@ import api from "../../api/axios";
 import { FaUserCircle, FaShoppingCart } from "react-icons/fa";
 import { useAuth } from "../../AuthContext/AuthContext";
 import { useCart } from "../../CartContext/CartContext";
-
+import SearchBarWithSuggestions from "../Hero/Hero";
 const Navbar = () => {
   const { cartCount } = useCart();
 
@@ -51,7 +51,12 @@ const Navbar = () => {
           </Link>
 
           {/* DESKTOP */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6 flex-1 justify-end">
+            {/* ✅ Search Bar */}
+            <div className="w-[350px]">
+              <SearchBarWithSuggestions />
+            </div>
+
             <Link to="/products" className="nav-link">
               Products
             </Link>
@@ -146,6 +151,10 @@ const Navbar = () => {
       {/* MOBILE MENU */}
       {open && (
         <div className="md:hidden bg-white border-t">
+          <div className="px-4 pt-4">
+            <SearchBarWithSuggestions />
+          </div>
+
           <div className="flex flex-col px-4 py-3 gap-3">
             <button
               onClick={() => handleMobileNavigate("/products")}

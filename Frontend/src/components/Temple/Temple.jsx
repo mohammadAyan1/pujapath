@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const BASE_URL_IMAGE = import.meta.env.VITE_BACKEND_FOR_URL;
 
 const Temple = () => {
+    const navigate = useNavigate()
+
     const [temples, setTemples] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -165,7 +168,9 @@ const Temple = () => {
                                     key={temple.id}
                                     className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden flex flex-col"
                                 >
-                                    <div className="h-48 w-full bg-gray-100 overflow-hidden">
+                                    <div className="h-48 w-full bg-gray-100 overflow-hidden cursor-pointer"
+                                        onClick={() => navigate(`/temple/${temple.id}`)}
+                                    >
                                         <img
                                             src={getImageUrl(temple.image)}
                                             alt={temple.name}

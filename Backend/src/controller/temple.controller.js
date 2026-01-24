@@ -4,6 +4,7 @@ import { getPagination } from "../utils/pagination.js";
 import fs from "fs";
 import path from "path";
 
+
 export const createTemple = async (req, res) => {
   if (req?.user?.role !== "admin") {
     return res.status(403).json({
@@ -169,6 +170,41 @@ export const getAllTemple = async (req, res) => {
     });
   }
 };
+
+
+export const getTempleById = async (req, res) => {
+  const connection = db.promise();
+
+  try {
+    const { id } = req.params; // ✅ params
+
+    console.log(id);
+
+
+    const query = `SELECT * FROM temples WHERE id = ? LIMIT 1`;
+    const [rows] = await connection.execute(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Temple not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Temple fetched successfully",
+      data: rows[0], // ✅ single object
+    });
+  } catch (error) {
+    console.error("Get By ID Temple Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch temple",
+    });
+  }
+};
+
 
 
 export const updateTemple = async (req, res) => {

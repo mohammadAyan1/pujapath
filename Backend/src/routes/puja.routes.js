@@ -12,6 +12,7 @@ import { uploadImage } from "../middelware/uploadImage.middleware.js";
 const pujaRoutes = express.Router();
 
 pujaRoutes.get("/", getAllPuja);
+
 pujaRoutes.post("/", isAuthenticated, uploadImage("puja").single("image"), createPuja);
 pujaRoutes.patch("/status/:id", isAuthenticated, updatePujaStatus);
 pujaRoutes.put("/:id", isAuthenticated, uploadImage("puja").single("image"), updatePuja);

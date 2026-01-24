@@ -333,6 +333,7 @@ export const getPanditById = async (req, res) => {
         t.state AS temple_state
       FROM pandits p
       LEFT JOIN temples t ON p.temple_id = t.id
+      LEFT JOIN users u ON p.user_id = u.id
       WHERE p.id = ? AND p.status = 'active'
       `,
       [Number(id)]

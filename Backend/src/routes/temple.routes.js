@@ -6,9 +6,11 @@ import {
   getAllTemple,
   updateTemple,
   deleteTemple,
+  getTempleById,
 } from "../controller/temple.controller.js";
 import { isAuthenticated } from "../middelware/auth.middleware.js";
 templeRoutes.get("/", getAllTemple);
+templeRoutes.get("/:id", getTempleById);
 templeRoutes.post(
   "/",
   isAuthenticated,

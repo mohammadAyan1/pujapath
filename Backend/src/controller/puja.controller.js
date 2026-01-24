@@ -308,6 +308,7 @@ export const getAllPuja = async (req, res) => {
   }
 };
 
+
 // export const updatePuja = async (req, res) => {
 //   if (req?.user?.role !== "admin") {
 //     return res.status(403).json({

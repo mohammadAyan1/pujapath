@@ -4,12 +4,13 @@ import { useLocation } from "react-router-dom";
 import api from "./api/axios";
 import { useAuth } from "./AuthContext/AuthContext";
 import { useCart } from "./CartContext/CartContext";
-
+import { socket } from "./socket/socket";
+import CallReceiver from "./components/VoiceCallModal/CallReceiver";
 function App() {
-  const { fetchCart } = useCart()
-  const { setUser } = useAuth();
+  const { fetchCart } = useCart();
+  const { user, setUser } = useAuth();
   const location = useLocation();
-  const [heroClose, setHeroClose] = useState(true)
+  const [heroClose, setHeroClose] = useState(true);
 
   const fetchUserDetails = async () => {
     try {
@@ -20,18 +21,36 @@ function App() {
     }
   };
 
+  // ✅ fetch user every route (your current logic)
   useEffect(() => {
     fetchUserDetails();
 
-    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/chat") || location.pathname.startsWith("/checkout") || location.pathname.startsWith("/puja-checkout") || location.pathname.startsWith("/astro-checkout") || location.pathname.startsWith("/cart") || location.pathname.startsWith("/login")) {
+    if (location.pathname === "/chat" || location.pathname.startsWith("/admin")) {
       setHeroClose(false);
     } else {
       setHeroClose(true);
     }
-    fetchCart()
-  }, [location.pathname]);  // 🔥 runs on every route change
 
-  return <AppRoutes heroClose={heroClose} />;
+    fetchCart();
+  }, [location.pathname]);
+
+  // ✅ Connect socket when user is available
+  useEffect(() => {
+    if (user?.id) {
+      if (!socket.connected) socket.connect();
+
+      socket.emit("join", user.id); // ✅ join online users (your backend)
+    } else {
+      if (socket.connected) socket.disconnect();
+    }
+  }, [user?.id]);
+
+  return (
+    <>
+      <CallReceiver />
+      <AppRoutes heroClose={heroClose} />;
+    </>
+  )
 }
 
 export default App;

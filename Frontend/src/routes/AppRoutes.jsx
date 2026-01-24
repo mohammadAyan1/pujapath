@@ -17,7 +17,6 @@ import AdminPujaCategory from "../components/Admin/AdminPujaCategory/AdminPujaCa
 import AdminPuja from "../components/Admin/AdminPuja/AdminPuja";
 import AdminPandit from "../components/Admin/AdminPandit/AdminPandit";
 import AdminUsers from "../components/Admin/AdminUsers/AdminUsers";
-import Hero from "../components/Hero/Hero";
 import ChatPage from "../pages/ChatPage";
 import Checkout from "../components/Checkout/Checkout";
 import Cart from "../pages/Cart/Cart";
@@ -25,12 +24,16 @@ import Pandit from "../pages/Pandit/Pandit";
 import Temple from "../components/Temple/Temple";
 import PujaCheckout from "../components/PujaCheckout/PujaCheckout";
 import AstroCheckout from "../components/AstroCheckout/AstroCheckout";
+import SearchBarWithSuggestions from "../components/Hero/Hero";
+import PanditDetail from "../pages/Details/PanditDetail";
+import ProductDetail from "../pages/Details/ProductDetail";
+import PujaDetail from "../pages/Details/PujaDetail";
+import TempleDetail from "../pages/Details/TempleDetail";
+import MyBookings from "../components/MyBookings/MyBookings";
 const AppRoutes = ({ heroClose }) => {
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
       <Navbar />
-      {heroClose && <Hero />}
-
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -57,6 +60,13 @@ const AppRoutes = ({ heroClose }) => {
           <Route path="/temple" element={<Temple />} />
           <Route path="/puja-checkout/:id" element={<PujaCheckout />} />
           <Route path="/astro-checkout/:id" element={<AstroCheckout />} />
+          {/* ✅ Detail routes */}
+          <Route path="/pandit/:id" element={<PanditDetail />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/puja/:id" element={<PujaDetail />} />
+          <Route path="/temple/:id" element={<TempleDetail />} />
+          {/* Booking */}
+          <Route path="/bookings" element={<MyBookings />} />
 
 
         </Routes>

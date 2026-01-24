@@ -563,7 +563,10 @@ const Puja = () => {
                     key={item.id}
                     className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden flex flex-col"
                   >
-                    <div className="h-48 w-full bg-gray-100 overflow-hidden">
+                    <div className="h-48 w-full bg-gray-100 overflow-hidden cursor-pointer"
+                      onClick={() => navigate(`/puja/${item.id}`)}
+
+                    >
                       <img
                         src={getImageUrl(item.image)}
                         alt={item.name}

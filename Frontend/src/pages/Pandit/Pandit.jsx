@@ -246,7 +246,10 @@ const Pandit = () => {
                                         className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden flex flex-col"
                                     >
                                         {/* ✅ Image */}
-                                        <div className="h-48 w-full bg-gray-100 overflow-hidden">
+                                        <div className="h-48 w-full bg-gray-100 overflow-hidden cursor-pointer"
+                                            onClick={() => navigate(`/pandit/${item.id}`)}
+
+                                        >
                                             <img
                                                 src={getImageUrl(item.image)}
                                                 alt={item.name}

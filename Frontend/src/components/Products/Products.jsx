@@ -150,8 +150,6 @@ const Products = () => {
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
-
-
       {/* ✅ FILTERS */}
       <div className="max-w-7xl mx-auto px-4 pb-4">
         <div className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
@@ -183,7 +181,6 @@ const Products = () => {
           </div>
         </div>
       </div>
-
       {/* ✅ PRODUCTS GRID */}
       <div className="max-w-7xl mx-auto px-4 pb-10">
         {products.length === 0 && !loading ? (
@@ -198,8 +195,9 @@ const Products = () => {
                   key={product.id}
                   className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden flex flex-col"
                 >
-                  <div className="h-48 w-full bg-gray-100 overflow-hidden">
+                  <div className="h-48 w-full bg-gray-100 overflow-hidden cursor-pointer">
                     <img
+                      onClick={() => navigate(`/product/${product?.id}`)}
                       src={getImageUrl(product.image)}
                       alt={product.name}
                       className="h-full w-full object-cover"
