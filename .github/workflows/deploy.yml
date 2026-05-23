@@ -30,6 +30,4 @@ jobs:
 
             npm install
 
-            pkill node || true
-
-            nohup node index.js > output.log 2>&1 &
+            pm2 restart pujapath-api
