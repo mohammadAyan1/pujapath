@@ -4,10 +4,9 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSync,
-  faUserShield,
-  faUser,
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
+import Register from "../../Register/Register";
 
 /* ✅ Debounce Hook */
 const useDebounce = (value, delay = 500) => {
@@ -214,6 +213,7 @@ const AdminUsers = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <Register />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">

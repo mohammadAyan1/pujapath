@@ -145,12 +145,7 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
-    // if (!Array.isArray(devotees) || devotees.length !== Number(people_count)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Devotees must match people_count",
-    //   });
-    // }
+    
 
     // ✅ Verify signature
 
@@ -209,14 +204,7 @@ export const verifyPujaRazorpayAndBook = async (req, res) => {
       )
     `;
 
-    // const metaData = JSON.stringify({
-    //   puja_id,
-    //   package_type,
-    //   people_count,
-    //   devotees,
-    //   total_amount,
-    //   whatsapp_number
-    // });
+    
 
     const metaData = JSON.stringify({
       booking_type: "puja",

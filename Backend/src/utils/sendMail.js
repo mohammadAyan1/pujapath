@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendOTPEmail = async (toEmail, subject, html) => {
   await transporter.sendMail({
-    from: `"PujaPath" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_FROM,
     to: toEmail,
     subject: subject,
     html: html,

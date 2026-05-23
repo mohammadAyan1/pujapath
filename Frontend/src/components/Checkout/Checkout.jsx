@@ -188,7 +188,7 @@ export default function Checkout() {
             alert("✅ Address Added Successfully!");
         } catch (error) {
             console.error("Create address error:", error);
-            alert("❌ Failed to add address");
+            alert(error?.response?.data?.message);
         } finally {
             setSavingAddress(false);
         }

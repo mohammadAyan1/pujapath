@@ -3,6 +3,7 @@ import db from "../utils/db.js";
 import { sendOTPEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 
+
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
@@ -133,6 +134,11 @@ export const logout = async (req, res) => {
 export const register = async (req, res) => {
   const connection = await db.promise().getConnection();
 
+
+
+  console.log(adminAuthentication);
+
+
   try {
     const { name, email, mobile, password } = req.body;
 
@@ -220,6 +226,7 @@ export const register = async (req, res) => {
   } catch (error) {
     // ❌ Rollback on ANY failure
     await connection.rollback();
+    console.log(error);
 
     console.error("Register Error:", error);
 
@@ -231,6 +238,115 @@ export const register = async (req, res) => {
     connection.release();
   }
 };
+
+// Admin register user
+
+export const adminRegister = async (req, res) => {
+
+  if (req?.user?.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied: Admin only",
+    });
+  }
+
+
+
+  const connection = await db.promise().getConnection();
+
+  try {
+    const { name, email, mobile, password } = req.body;
+
+    // ✅ Basic validation
+    if (!name || !email || !mobile || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+
+    if (password?.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password Length should be 8 or Greater than 8",
+      });
+    }
+
+    // ✅ 1. Check if email OR mobile already exists
+    const [existingUsers] = await connection.execute(
+      `
+      SELECT id, email, mobile
+      FROM users
+      WHERE email = ? OR mobile = ?
+      `,
+      [email, mobile],
+    );
+
+    if (existingUsers.length > 0) {
+      const existingUser = existingUsers[0];
+
+      if (existingUser.email === email) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already registered",
+        });
+      }
+
+      if (existingUser.mobile === mobile) {
+        return res.status(409).json({
+          success: false,
+          message: "Mobile number already registered",
+        });
+      }
+    }
+
+    // 🔐 2. Start transaction ONLY after validation
+    await connection.beginTransaction();
+
+    // 🔐 Hash password
+    const hashPassword = await bcrypt.hash(password, 10);
+
+
+    // ✅ 3. Insert user
+    const insertQuery = `
+      INSERT INTO users 
+      (name, email, mobile, password,is_verified)
+      VALUES (?, ?, ?, ?, 1)
+    `;
+
+    await connection.execute(insertQuery, [
+      name,
+      email,
+      mobile,
+      hashPassword,
+    ]);
+
+
+    // ✅ 4. Commit transaction
+    await connection.commit();
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully.",
+      data: { email },
+    });
+  } catch (error) {
+    // ❌ Rollback on ANY failure
+    await connection.rollback();
+    console.log(error);
+
+    console.error("Register Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Registration failed",
+    });
+  } finally {
+    connection.release();
+  }
+};
+
 
 export const verifyEmail = async (req, res) => {
   const connection = db.promise();

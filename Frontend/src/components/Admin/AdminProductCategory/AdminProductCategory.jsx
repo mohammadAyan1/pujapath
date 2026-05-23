@@ -250,8 +250,7 @@ const AdminProductCategory = () => {
   const handleDelete = async (id, status) => {
     if (
       window.confirm(
-        `Are you sure you want to ${
-          status == "active" ? "Inactive" : "active"
+        `Are you sure you want to ${status == "active" ? "Inactive" : "active"
         } this category?`,
       )
     ) {
@@ -313,22 +312,20 @@ const AdminProductCategory = () => {
             setActiveTab("form");
             resetForm();
           }}
-          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${
-            activeTab === "form"
-              ? "border-b-2 border-orange-600 text-orange-600"
-              : "text-gray-500"
-          }`}
+          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${activeTab === "form"
+            ? "border-b-2 border-orange-600 text-orange-600"
+            : "text-gray-500"
+            }`}
         >
           {isEditMode ? "Edit Category" : "Add Category"}
         </button>
 
         <button
           onClick={() => setActiveTab("table")}
-          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${
-            activeTab === "table"
-              ? "border-b-2 border-orange-600 text-orange-600"
-              : "text-gray-500"
-          }`}
+          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${activeTab === "table"
+            ? "border-b-2 border-orange-600 text-orange-600"
+            : "text-gray-500"
+            }`}
         >
           Category List
         </button>
@@ -421,11 +418,10 @@ const AdminProductCategory = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowActive(!showActive)}
-                className={`px-4 py-2 border rounded-lg transition-colors text-sm md:text-base font-medium ${
-                  showActive
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-600 text-white hover:bg-gray-700"
-                }`}
+                className={`px-4 py-2 border rounded-lg transition-colors text-sm md:text-base font-medium ${showActive
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
+                  }`}
               >
                 Showing: {showActive ? "Active" : "Inactive"}
               </button>
@@ -445,9 +441,8 @@ const AdminProductCategory = () => {
           {hoveredCategory && (
             <div
               ref={tooltipRef}
-              className={`fixed z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-3 md:p-4 w-[280px] md:w-80 max-h-[80vh] overflow-y-auto ${
-                tooltipSide === "right" ? "ml-2" : "mr-2"
-              }`}
+              className={`fixed z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-3 md:p-4 w-[280px] md:w-80 max-h-[80vh] overflow-y-auto ${tooltipSide === "right" ? "ml-2" : "mr-2"
+                }`}
               style={{
                 left: `${tooltipPosition.x}px`,
                 top: `${tooltipPosition.y}px`,
@@ -469,11 +464,10 @@ const AdminProductCategory = () => {
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">Status:</span>
                   <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      hoveredCategory.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                    className={`px-2 py-1 rounded text-xs font-medium ${hoveredCategory.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {hoveredCategory.status}
                   </span>
@@ -591,17 +585,13 @@ const AdminProductCategory = () => {
                       </td>
                       <td className="border p-2">
                         <button
-                          // onClick={() =>
-                          //   handleStatusToggle(category.id, category.status)
-                          // }
                           onClick={() =>
                             handleDelete(category.id, category?.status)
                           }
-                          className={`px-2 py-1 md:px-3 md:py-1 rounded-lg text-white text-xs md:text-sm font-medium transition-colors ${
-                            category.status === "active"
-                              ? "bg-green-600 hover:bg-green-700"
-                              : "bg-gray-500 hover:bg-gray-600"
-                          }`}
+                          className={`px-2 py-1 md:px-3 md:py-1 rounded-lg text-white text-xs md:text-sm font-medium transition-colors ${category.status === "active"
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-gray-500 hover:bg-gray-600"
+                            }`}
                         >
                           {category.status}
                         </button>

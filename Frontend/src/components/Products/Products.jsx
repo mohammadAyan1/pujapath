@@ -20,6 +20,8 @@ const Products = () => {
   const limit = 8; // ✅ load 8 products per scroll
   const [hasMore, setHasMore] = useState(true);
 
+
+
   // Search & filters
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("default");
@@ -52,6 +54,9 @@ const Products = () => {
 
       if (res?.data?.success) {
         const newData = res?.data?.data || [];
+
+        // check stock
+
 
         setProducts((prev) => (pageNo === 1 ? newData : [...prev, ...newData]));
 
@@ -197,7 +202,11 @@ const Products = () => {
                 >
                   <div className="h-48 w-full bg-gray-100 overflow-hidden cursor-pointer">
                     <img
-                      onClick={() => navigate(`/product/${product?.id}`)}
+                      onClick={
+                        product?.stock > 0
+                          ? () => navigate(`/product/${product.id}`)
+                          : undefined
+                      }
                       src={getImageUrl(product.image)}
                       alt={product.name}
                       className="h-full w-full object-cover"
@@ -229,18 +238,26 @@ const Products = () => {
                         ₹{product.price}
                       </p>
                     </div>
-
+                    {
+                      product?.stock <= 0 && (
+                        <div className="mt-3">
+                          <p className="text-lg font-bold text-red-600">Out Of the stock</p>
+                        </div>
+                      )
+                    }
                     <div className="mt-4 flex gap-2">
                       <button
                         onClick={() => handleAddToCart(product)}
-                        className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition text-sm font-medium"
+                        disabled={product?.stock <= 0}
+                        className={`flex-1 flex items-center justify-center gap-2 ${product?.stock <= 0 ? "bg-gray-500 cursor-not-allowed" : "bg-gray-900"} text-white py-2 rounded-lg ${product?.stock <= 0 ? "" : "hover:bg-gray-800"} transition text-sm font-medium`}
                       >
                         <FaShoppingCart /> Add to Cart
                       </button>
 
                       <button
                         onClick={() => buyNow(product)}
-                        className="flex-1 flex items-center justify-center gap-2 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition text-sm font-medium"
+                        disabled={product?.stock <= 0}
+                        className={`flex-1 flex items-center justify-center gap-2 ${product?.stock <= 0 ? "bg-gray-500 cursor-not-allowed" : "bg-orange-600"}   text-white py-2 rounded-lg ${product?.stock <= 0 ? "" : "hover:bg-orange-700"}  transition text-sm font-medium`}
                       >
                         <FaBolt /> Buy Now
                       </button>

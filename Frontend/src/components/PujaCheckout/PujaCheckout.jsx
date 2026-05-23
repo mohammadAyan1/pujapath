@@ -24,9 +24,6 @@ export default function PujaCheckout() {
 
     const [whatsappNumber, setWhatsappNumber] = useState("");
 
-    // const [devotees, setDevotees] = useState([
-    //     { name: "", gotra: "" },
-    // ]);
 
     const [gotra, setGotra] = useState("");
     const [devotees, setDevotees] = useState([{ name: "" }]);
@@ -69,22 +66,6 @@ export default function PujaCheckout() {
     }, [id]);
 
     // ✅ Reset devotees count when package changes
-    // useEffect(() => {
-    //     setDevotees((prev) => {
-    //         const next = [...prev];
-
-    //         if (next.length < peopleCount) {
-    //             for (let i = next.length; i < peopleCount; i++) {
-    //                 next.push({ name: "", gotra: "" });
-    //             }
-    //         } else if (next.length > peopleCount) {
-    //             next.length = peopleCount;
-    //         }
-
-    //         return next;
-    //     });
-    // }, [peopleCount]);
-
     useEffect(() => {
         setDevotees((prev) => {
             const next = [...prev];
@@ -109,12 +90,6 @@ export default function PujaCheckout() {
     const tax = Math.round(subtotal * 0.05);
     const platformFee = 10;
     const total = subtotal + tax + platformFee;
-
-    // const updateDevotee = (index, key, value) => {
-    //     setDevotees((prev) =>
-    //         prev.map((d, i) => (i === index ? { ...d, [key]: value } : d))
-    //     );
-    // };
 
     // ✅ Pay Now
 
@@ -224,7 +199,7 @@ export default function PujaCheckout() {
             rzp.open();
         } catch (error) {
             console.log("Pay Now Error:", error);
-            alert("❌ Something went wrong");
+            alert(error?.response?.data?.message);
         }
     };
 

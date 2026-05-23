@@ -54,7 +54,7 @@ export default function ImageViewerModal({ open, src, onClose }) {
                 </button>
 
                 {/* Controls */}
-                <div
+                {/* <div
                     style={{
                         position: "absolute",
                         bottom: 12,
@@ -101,7 +101,7 @@ export default function ImageViewerModal({ open, src, onClose }) {
                     >
                         ⬇ Download
                     </a>
-                </div>
+                </div> */}
 
                 {/* Image */}
                 <div

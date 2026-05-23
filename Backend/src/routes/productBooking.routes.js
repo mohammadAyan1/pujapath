@@ -17,5 +17,8 @@ productBookingRoutes.post("/razorpay/create-order", isAuthenticated, createRazor
 // ✅ Razorpay Verify + Booking
 productBookingRoutes.post("/razorpay/verify", isAuthenticated, verifyRazorpayAndBook);
 
+// multiple product booking
+
+
 
 export default productBookingRoutes;

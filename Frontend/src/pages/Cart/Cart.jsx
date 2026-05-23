@@ -1,7 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useCart } from "../../CartContext/CartContext";
 import { FaMinus, FaPlus, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import api from "../../api/axios";
+import CheckoutModal from "./CheckoutModal";
 
 const BASE_URL_IMAGE =
     import.meta.env.VITE_BACKEND_FOR_URL
@@ -13,14 +15,16 @@ const getImageUrl = (imgPath) => {
 };
 
 const Cart = () => {
+
+    const [showCheckout, setShowCheckout] = useState(false);
     const {
         cartItems,
         cartLoading,
         updateCartQty,
         removeCartItem,
         clearCart,
+        setCartItems,
     } = useCart();
-
     const totalAmount = useMemo(() => {
         return cartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
     }, [cartItems]);
@@ -47,6 +51,10 @@ const Cart = () => {
                 </div>
             </div>
         );
+    }
+
+    const handleBookProduct = async () => {
+        const res = api.get("/product-booking/multiple")
     }
 
     return (
@@ -151,9 +159,23 @@ const Cart = () => {
                         </span>
                     </div>
 
-                    <button className="w-full mt-5 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">
+                    <button onClick={() => setShowCheckout(true)} className="w-full mt-5 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">
                         Checkout
                     </button>
+
+
+
+                    {showCheckout && (
+                        <CheckoutModal
+                            cartItems={cartItems}
+                            onClose={() => setShowCheckout(false)}
+                            onSuccess={() => {
+                                setCartItems([]); // UI clear
+                                setShowCheckout(false);
+                                navigate("/");
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </div>

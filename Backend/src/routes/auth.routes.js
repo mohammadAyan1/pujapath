@@ -7,6 +7,8 @@ import {
   resetPassword,
   forgotPassword,
   logout,
+  adminRegister
+
 } from "../controller/auth.controller.js";
 import { isAuthenticated } from "../middelware/auth.middleware.js";
 
@@ -24,4 +26,7 @@ authRoutes.post("/verify", verifyEmail);
 authRoutes.post("/resend", resendOTP);
 authRoutes.post("/forgot-password", forgotPassword);
 authRoutes.post("/reset-password", resetPassword);
+
+authRoutes.post("/admin/register", isAuthenticated, adminRegister);
+
 export default authRoutes;

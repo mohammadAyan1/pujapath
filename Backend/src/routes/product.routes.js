@@ -18,7 +18,7 @@ productRoutes.post(
   createProduct
 );
 productRoutes.get("/", getAllProduct);
-productRoutes.get("/:id", isAuthenticated, getProductById);
+productRoutes.get("/:id", getProductById);
 productRoutes.put(
   "/:id",
   isAuthenticated,

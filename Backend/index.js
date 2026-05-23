@@ -27,6 +27,7 @@ import {
   getOrCreateConversation,
   saveMessage,
 } from "./src/controller/chat.controller.js";
+import cardBookingRoutes from "./src/routes/cartBooking.routes.js";
 
 dotenv.config();
 
@@ -68,6 +69,8 @@ app.use("/api/product-booking", productBookingRoutes);
 app.use("/api/puja-booking", pujaBookingRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/bookings", myBookingRoutes);
+app.use("/api/cart-booking", cardBookingRoutes);
+
 
 
 // ✅ Static for images

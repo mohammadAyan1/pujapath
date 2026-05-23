@@ -235,7 +235,7 @@ const Home = () => {
         <HorizontalSection
           title="Pooja Store"
           actionText="View All"
-          onAction={() => navigate("/product")}
+          onAction={() => navigate("/products")}
           loading={loading}
         >
           {homeData?.products?.map((prod) => (
@@ -434,9 +434,13 @@ const PanditCard = ({ pandit, getImageUrl, onClick }) => {
 };
 
 const ProductCard = ({ product, getImageUrl, onClick }) => {
+
+  console.log(product);
+
+
   return (
     <div
-      onClick={onClick}
+      onClick={product?.stock <= 0 ? "" : onClick}
       className="min-w-[220px] bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer overflow-hidden"
     >
       <div className="h-32 bg-gray-100">
@@ -454,11 +458,17 @@ const ProductCard = ({ product, getImageUrl, onClick }) => {
         <p className="mt-2 text-sm font-bold text-gray-900">
           ₹ {product.price}
         </p>
-        <button className="mt-3 w-full py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition">
+
+        <p className="mt-2 text-sm font-bold text-gray-900 text-red-700">
+          {product?.stock <= 0 ? "OUT of STock" : ""}
+        </p>
+
+
+        <button disabled={product?.stock <= 0} className={`mt-3 w-full py-2 ${product?.stock <= 0 ? "bg-gray-400 cursor-not-allowed" : "bg-orange-600"}  text-white rounded-lg text-sm ${product?.stock <= 0 ? "" : "hover:bg-orange-700"} transition`}>
           Buy Now
         </button>
       </div>
-    </div>
+    </div >
   );
 };
 

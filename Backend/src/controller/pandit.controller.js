@@ -25,128 +25,6 @@ const safeParseArray = (val) => {
 
 
 /* ================= CREATE PANDIT ================= */
-// export const createPandit = async (req, res) => {
-//   if (req?.user?.role !== "admin") {
-//     return res.status(403).json({
-//       success: false,
-//       message: "Access denied: Admin only",
-//     });
-//   }
-
-//   const connection = await db.promise().getConnection();
-
-//   try {
-//     const {
-//       name,
-//       expertise,
-//       experience,
-//       language,
-//       rating,
-//       temple_id,
-//       type,
-//       is_free = 0,
-//       price_per_minute = null,
-
-//       // ✅ NEW
-//       communication,
-//     } = req.body;
-
-//     const image = req.file ? req.file.path : null;
-
-//     if (!name || !expertise || !experience || !language || !rating || !type) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Required fields are missing",
-//       });
-//     }
-
-//     // ✅ NEW: parse communication
-//     let commArray = [];
-//     try {
-//       commArray = communication ? JSON.parse(communication) : [];
-//     } catch (err) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid communication format",
-//       });
-//     }
-
-//     const allowedOptions = ["call", "chat", "offline"];
-//     const isValidComm =
-//       Array.isArray(commArray) &&
-//       commArray.length > 0 &&
-//       commArray.every((x) => allowedOptions.includes(x));
-
-//     if (!isValidComm) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "communication must include call/chat/offline (at least one)",
-//       });
-//     }
-
-//     // ✅ validate free/price
-//     const isFreeNum = Number(is_free) === 1 ? 1 : 0;
-
-//     let finalPrice = null;
-//     if (isFreeNum === 0) {
-//       const priceNum = Number(price_per_minute);
-//       if (!priceNum || priceNum <= 0) {
-//         return res.status(400).json({
-//           success: false,
-//           message: "price_per_minute must be > 0 for paid pandit",
-//         });
-//       }
-//       finalPrice = priceNum;
-//     }
-
-//     await connection.beginTransaction();
-
-//     const insertQuery = `
-//       INSERT INTO pandits
-//       (
-//         name, image, temple_id,
-//         expertise, experience, language, rating,
-//         status, is_available,
-//         type, is_free, price_per_minute,
-//         communication
-//       )
-//       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)
-//     `;
-
-//     await connection.execute(insertQuery, [
-//       name,
-//       image,
-//       temple_id || null,
-//       expertise,
-//       experience,
-//       language,
-//       rating,
-//       type,
-//       isFreeNum,
-//       finalPrice,
-//       JSON.stringify(commArray),
-//     ]);
-
-//     await connection.commit();
-
-//     return res.status(201).json({
-//       success: true,
-//       message: "Pandit created successfully",
-//     });
-//   } catch (error) {
-//     try {
-//       await connection.rollback();
-//     } catch (_) { }
-
-//     console.error("Create Pandit Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to create Pandit",
-//     });
-//   } finally {
-//     connection.release();
-//   }
-// };
 
 export const createPandit = async (req, res) => {
   if (req?.user?.role !== "admin") {
@@ -166,6 +44,7 @@ export const createPandit = async (req, res) => {
       language,
       rating,
       temple_id,
+      user_id,
       type,
       is_free = 0,
       price_per_minute = null,
@@ -268,10 +147,11 @@ export const createPandit = async (req, res) => {
         experience, language, rating,
         status, is_available,
         type, is_free, price_per_minute,
-        communication
+        communication,
+        user_id
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?,?)
     `;
 
     await connection.execute(insertQuery, [
@@ -289,6 +169,7 @@ export const createPandit = async (req, res) => {
       isFreeNum,
       finalPrice,
       JSON.stringify(commArray),
+      user_id
     ]);
 
     await connection.commit();
@@ -455,182 +336,6 @@ export const getAllPandit = async (req, res) => {
 };
 
 /* ================= UPDATE PANDIT ================= */
-// export const updatePandit = async (req, res) => {
-//   if (req?.user?.role !== "admin") {
-//     return res.status(403).json({
-//       success: false,
-//       message: "Access denied: Admin only",
-//     });
-//   }
-
-//   const connection = await db.promise().getConnection();
-
-//   try {
-//     const { id } = req.params;
-
-//     const {
-//       name,
-//       expertise,
-//       experience,
-//       language,
-//       rating,
-//       temple_id,
-//       type,
-//       is_free = 0,
-//       price_per_minute = null,
-
-//       // ✅ NEW
-//       communication,
-//     } = req.body;
-
-//     if (!id) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Pandit id is required",
-//       });
-//     }
-
-//     if (!name || !expertise || !experience || !language || !rating || !type) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Required fields are missing",
-//       });
-//     }
-
-//     if (!["astro", "pandit"].includes(type)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid pandit type",
-//       });
-//     }
-
-//     if (rating < 0 || rating > 5) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Rating must be between 0 and 5",
-//       });
-//     }
-
-//     // ✅ NEW: parse communication
-//     let commArray = [];
-//     try {
-//       commArray = communication ? JSON.parse(communication) : [];
-//     } catch (err) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid communication format",
-//       });
-//     }
-
-//     const allowedOptions = ["call", "chat", "offline"];
-//     const isValidComm =
-//       Array.isArray(commArray) &&
-//       commArray.length > 0 &&
-//       commArray.every((x) => allowedOptions.includes(x));
-
-//     if (!isValidComm) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "communication must include call/chat/offline (at least one)",
-//       });
-//     }
-
-//     // ✅ validate free/price
-//     const isFreeNum = Number(is_free) === 1 ? 1 : 0;
-
-//     let finalPrice = null;
-//     if (isFreeNum === 0) {
-//       const priceNum = Number(price_per_minute);
-//       if (!priceNum || priceNum <= 0) {
-//         return res.status(400).json({
-//           success: false,
-//           message: "price_per_minute must be > 0 for paid pandit",
-//         });
-//       }
-//       finalPrice = priceNum;
-//     }
-
-//     // ✅ old image remove if new uploaded
-//     let imageQuery = "";
-//     let imageValue = [];
-
-//     if (req.file) {
-//       const [old] = await connection.execute(
-//         "SELECT image FROM pandits WHERE id = ?",
-//         [id]
-//       );
-
-//       if (old.length && old[0].image && fs.existsSync(old[0].image)) {
-//         fs.unlinkSync(old[0].image);
-//       }
-
-//       imageQuery = ", image = ?";
-//       imageValue.push(req.file.path);
-//     }
-
-//     await connection.beginTransaction();
-
-//     const updateQuery = `
-//       UPDATE pandits
-//       SET
-//         name = ?,
-//         temple_id = ?,
-//         expertise = ?,
-//         experience = ?,
-//         language = ?,
-//         rating = ?,
-//         type = ?,
-//         is_free = ?,
-//         price_per_minute = ?,
-//         communication = ?
-//         ${imageQuery},
-//         updated_at = NOW()
-//       WHERE id = ? AND status = 'active'
-//     `;
-
-//     const [result] = await connection.execute(updateQuery, [
-//       name,
-//       temple_id || null,
-//       expertise,
-//       experience,
-//       language,
-//       rating,
-//       type,
-//       isFreeNum,
-//       finalPrice,
-//       JSON.stringify(commArray),
-//       ...imageValue,
-//       id,
-//     ]);
-
-//     if (result.affectedRows === 0) {
-//       await connection.rollback();
-//       return res.status(404).json({
-//         success: false,
-//         message: "Pandit not found",
-//       });
-//     }
-
-//     await connection.commit();
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Pandit updated successfully",
-//     });
-//   } catch (error) {
-//     try {
-//       await connection.rollback();
-//     } catch (_) { }
-
-//     console.error("Update Pandit Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to update Pandit",
-//     });
-//   } finally {
-//     connection.release();
-//   }
-// };
 
 export const updatePandit = async (req, res) => {
   if (req?.user?.role !== "admin") {

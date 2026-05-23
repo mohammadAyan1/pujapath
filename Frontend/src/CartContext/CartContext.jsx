@@ -128,6 +128,7 @@ export const CartProvider = ({ children }) => {
                 updateCartQty,
                 removeCartItem,
                 clearCart,
+                setCartItems,
             }}
         >
             {children}

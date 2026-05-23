@@ -30,6 +30,7 @@ import ProductDetail from "../pages/Details/ProductDetail";
 import PujaDetail from "../pages/Details/PujaDetail";
 import TempleDetail from "../pages/Details/TempleDetail";
 import MyBookings from "../components/MyBookings/MyBookings";
+import BookingDetails from "../components/BookingDetails/BookingDetails";
 const AppRoutes = ({ heroClose }) => {
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
@@ -67,7 +68,8 @@ const AppRoutes = ({ heroClose }) => {
           <Route path="/temple/:id" element={<TempleDetail />} />
           {/* Booking */}
           <Route path="/bookings" element={<MyBookings />} />
-
+          {/* booking details */}
+          <Route path="/booking/detaild/:type/:id" element={<BookingDetails />} />
 
         </Routes>
       </main>
