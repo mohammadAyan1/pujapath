@@ -30,4 +30,6 @@ jobs:
 
             npm install
 
-            pm2 restart pujapath-api
+            pm2 restart pujapath-api || pm2 start index.js --name pujapath-api
+
+            pm2 save
