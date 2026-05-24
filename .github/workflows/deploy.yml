@@ -1,4 +1,4 @@
-name: Deploy Backend to EC2
+name: Deploy Full Stack to EC2
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2
+      - name: Deploy Backend + Frontend
         uses: appleboy/ssh-action@master
 
         with:
@@ -26,10 +26,17 @@ jobs:
 
             git pull
 
+            # Backend
             cd Backend
-
             npm install
+            pm2 restart pujapath-api
 
-            pm2 restart pujapath-api || pm2 start index.js --name pujapath-api
+            # Frontend
+            cd ~/pujapath/Frontend
+            npm install
+            NODE_OPTIONS="--max-old-space-size=512" npm run build
 
-            pm2 save
+            sudo rm -rf /var/www/html/*
+            sudo cp -r dist/* /var/www/html/
+
+            sudo systemctl restart nginx

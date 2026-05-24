@@ -61,6 +61,11 @@ const AppRoutes = ({ heroClose }) => {
           <Route path="/temple" element={<Temple />} />
           <Route path="/puja-checkout/:id" element={<PujaCheckout />} />
           <Route path="/astro-checkout/:id" element={<AstroCheckout />} />
+
+          {/*  */}
+          <Route path="/ayan" element={<Auth />} />
+
+          {/*  */}
           {/* ✅ Detail routes */}
           <Route path="/pandit/:id" element={<PanditDetail />} />
           <Route path="/product/:id" element={<ProductDetail />} />
