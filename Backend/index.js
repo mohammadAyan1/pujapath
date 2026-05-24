@@ -233,4 +233,5 @@ io.on("connection", (socket) => {
 app.listen(PORT || 3000, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT || 3000}`);
   console.log("Auto deploy working")
+  console.log("CI/CD Working");
 });
