@@ -63,7 +63,7 @@ const AppRoutes = ({ heroClose }) => {
           <Route path="/astro-checkout/:id" element={<AstroCheckout />} />
 
           {/*  */}
-          <Route path="/ayan" element={<Auth />} />
+          <Route path="/sky-info-group" element={<Auth />} />
 
           {/*  */}
           {/* ✅ Detail routes */}
