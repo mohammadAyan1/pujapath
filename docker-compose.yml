@@ -1,9 +1,6 @@
-
-
 services:
   backend:
-    build:
-      context: ./Backend
+    image: mohammadayan7879/pujapathvedic-backend:latest
 
     container_name: pujapath-backend
 
@@ -16,8 +13,7 @@ services:
     restart: always
 
   frontend:
-    build:
-      context: ./Frontend
+    image: mohammadayan7879/pujapathvedic-frontend:latest
 
     container_name: pujapath-frontend
 
