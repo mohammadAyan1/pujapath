@@ -45,6 +45,7 @@ function App() {
     }
   }, [user?.id]);
 
+  console.log(import.meta.env.VITE_BACKEND_URL)
   return (
     <>
       <CallReceiver />

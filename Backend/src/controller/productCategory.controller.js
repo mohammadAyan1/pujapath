@@ -91,11 +91,11 @@ export const getAllProductCategory = async (req, res) => {
       data: rows,
     });
   } catch (error) {
-    console.error("Get All Product Categories Error:", error);
+    console.log("Get All Product Categories Error:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch product categories",
+      message: `Failed to fetch product categories ${error.message}`,
     });
   }
 };

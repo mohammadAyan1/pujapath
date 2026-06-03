@@ -11,6 +11,13 @@ export default function Checkout() {
     const param = useParams();
     const navigate = useNavigate()
 
+
+    // const { id } = param
+
+    // console.log('====================================');
+    // console.log(id);
+    // console.log('====================================');
+
     const [cartItems, setCartItems] = useState([]);
     const [loadingProduct, setLoadingProduct] = useState(false);
 

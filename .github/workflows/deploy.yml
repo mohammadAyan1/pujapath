@@ -1,4 +1,50 @@
-name: Deploy Full Stack to EC2
+# name: Deploy Full Stack to EC2
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
+
+#       - name: Deploy Backend + Frontend
+#         uses: appleboy/ssh-action@master
+
+#         with:
+#           host: ${{ secrets.EC2_HOST }}
+#           username: ${{ secrets.EC2_USERNAME }}
+#           key: ${{ secrets.EC2_SSH_KEY }}
+
+#           script: |
+#             cd ~/pujapath
+
+#             git pull
+
+#             # Backend
+#             cd Backend
+#             npm install
+#             pm2 restart pujapath-api
+
+#             # Frontend
+#             cd ~/pujapath/Frontend
+#             npm install
+#             NODE_OPTIONS="--max-old-space-size=512" npm run build
+
+#             sudo rm -rf /var/www/html/*
+#             sudo cp -r dist/* /var/www/html/
+
+#             sudo systemctl restart nginx
+
+
+
+
+name: Deploy To EC2
 
 on:
   push:
@@ -9,34 +55,44 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Deploy Backend + Frontend
-        uses: appleboy/ssh-action@master
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
+  # Backend Build
+      - name: Build Backend Image
+        run: |
+          docker build -t mohammadayan7879/pujapathvedic-backend:latest ./Backend
+
+      - name: Push Backend Image
+        run: |
+          docker push mohammadayan7879/pujapathvedic-backend:latest
+
+  # Frontend Build
+      - name: Build Frontend Image
+        run: |
+          docker build -t mohammadayan7879/pujapathvedic-frontend:latest ./Frontend
+
+      - name: Push Frontend Image
+        run: |
+          docker push mohammadayan7879/pujapathvedic-frontend:latest
+
+  # Deploy on EC2
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-
           script: |
-            cd ~/pujapath
+            cd /home/ubuntu/pujapath
+            sudo docker compose pull
+            sudo docker compose up -d
 
-            git pull
-
-            # Backend
-            cd Backend
-            npm install
-            pm2 restart pujapath-api
-
-            # Frontend
-            cd ~/pujapath/Frontend
-            npm install
-            NODE_OPTIONS="--max-old-space-size=512" npm run build
-
-            sudo rm -rf /var/www/html/*
-            sudo cp -r dist/* /var/www/html/
-
-            sudo systemctl restart nginx

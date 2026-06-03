@@ -99,11 +99,11 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.log("Login Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Login failed",
+      message: `Login failed ${error.message}`,
     });
   }
 };
@@ -136,7 +136,7 @@ export const register = async (req, res) => {
 
 
 
-  console.log(adminAuthentication);
+  // console.log(adminAuthentication);
 
 
   try {
