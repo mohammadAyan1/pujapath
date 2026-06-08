@@ -8,9 +8,18 @@ services:
       - "3000:3000"
 
     env_file:
-      - ./Backend/.env
+      - ./.env
 
     restart: always
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     image: mohammadayan7879/pujapathvedic-frontend:latest
@@ -24,3 +33,10 @@ services:
 
     depends_on:
       - backend
+
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

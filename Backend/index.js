@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import http from "http";
 import { Server } from "socket.io";
+///
+import morgan from "morgan";
 
 import authRoutes from "./src/routes/auth.routes.js";
 import templeRoutes from "./src/routes/temple.routes.js";
@@ -36,7 +38,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://641xkt6n-5173.inc1.devtunnels.ms", "http://13.201.22.73",process.env.FRONTEND_URL], // frontend URL
+    origin: ["http://localhost:5173", "https://641xkt6n-5173.inc1.devtunnels.ms", "http://13.201.22.73", process.env.FRONTEND_URL], // frontend URL
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -46,6 +48,17 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+////
+app.use(morgan("combined"));
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date(),
+  });
+});
 
 app.get("/", (req, res) => {
   res.send("Server is running");
@@ -229,9 +242,15 @@ io.on("connection", (socket) => {
 // });
 
 
-
-app.listen(PORT || 3000, "0.0.0.0", () => {
+server.listen(PORT || 3000, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT || 3000}`);
-  console.log("Auto deploy working")
+  console.log("Auto deploy working");
   console.log("CI/CD Working");
 });
+
+
+// app.listen(PORT || 3000, "0.0.0.0", () => {
+//   console.log(`Server running on port ${PORT || 3000}`);
+//   console.log("Auto deploy working")
+//   console.log("CI/CD Working");
+// });
