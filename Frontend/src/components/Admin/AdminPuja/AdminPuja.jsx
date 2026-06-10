@@ -699,7 +699,10 @@ const AdminPuja = () => {
 
                 {isEditMode && pujas?.find((p) => p.id === editingId)?.image && (
                   <img
-                    src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pujas.find((p) => p.id === editingId)?.image
+                    // src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pujas.find((p) => p.id === editingId)?.image
+                    //   }`}
+
+                    src={`${import.meta.env.VITE_BACKEND_FOR_URL}${pujas.find((p) => p.id === editingId)?.image
                       }`}
                     alt="puja"
                     className="mt-2 w-24 h-24 object-cover rounded-lg border"
@@ -1011,7 +1014,8 @@ const AdminPuja = () => {
                   {hoveredPuja.image && (
                     <img
                       className="w-20 h-16 object-cover rounded border"
-                      src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPuja.image}`}
+                      // src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPuja.image}`}
+                      src={`${import.meta.env.VITE_BACKEND_FOR_URL}${hoveredPuja.image}`}
                       alt="puja"
                     />
                   )}

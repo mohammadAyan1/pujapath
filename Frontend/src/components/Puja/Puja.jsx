@@ -33,7 +33,8 @@ const Puja = () => {
     if (!imgPath) return "/no-image.png";
     if (imgPath.startsWith("http")) return imgPath;
     const cleanPath = imgPath.replaceAll("\\", "/");
-    return `${BASE_URL_IMAGE}/${cleanPath}`;
+    // return `${BASE_URL_IMAGE}/${cleanPath}`;
+    return `${BASE_URL_IMAGE}${cleanPath}`;
   };
 
   // ✅ Helper: Safely parse schedule_days (works with JSON array or "mon,thu")

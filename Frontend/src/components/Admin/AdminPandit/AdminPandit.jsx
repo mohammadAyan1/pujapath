@@ -553,7 +553,9 @@ const AdminPandit = () => {
 
     // profile image preview
     if (pandit.image) {
-      setImagePreview(`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`);
+      // setImagePreview(`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image}`);
+      setImagePreview(`${import.meta.env.VITE_BACKEND_FOR_URL}${pandit.image}`);
+
     } else {
       setImagePreview(null);
     }
@@ -561,7 +563,8 @@ const AdminPandit = () => {
     // ✅ show already saved gallery images as preview (readonly)
     setGalleryFiles([]); // no new uploads yet
     setGalleryPreview(
-      images.map((img) => `${import.meta.env.VITE_BACKEND_FOR_URL}/${img}`)
+      // images.map((img) => `${import.meta.env.VITE_BACKEND_FOR_URL}/${img}`)
+      images.map((img) => `${import.meta.env.VITE_BACKEND_FOR_URL}${img}`)
     );
 
     setImageFile(null);
@@ -1208,7 +1211,10 @@ const AdminPandit = () => {
                   <div className="w-16 h-16 rounded-full overflow-hidden">
                     {hoveredPandit.image ? (
                       <img
-                        src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPandit.image
+                        // src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${hoveredPandit.image
+                        //   }`}
+
+                        src={`${import.meta.env.VITE_BACKEND_FOR_URL}${hoveredPandit.image
                           }`}
                         alt={hoveredPandit.name}
                         className="w-full h-full object-cover"
@@ -1397,7 +1403,10 @@ const AdminPandit = () => {
                         <div className="w-12 h-12 rounded-full overflow-hidden">
                           {pandit.image ? (
                             <img
-                              src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image
+                              // src={`${import.meta.env.VITE_BACKEND_FOR_URL}/${pandit.image
+                              //   }`}
+
+                              src={`${import.meta.env.VITE_BACKEND_FOR_URL}${pandit.image
                                 }`}
                               alt={pandit.name}
                               className="w-full h-full object-cover"

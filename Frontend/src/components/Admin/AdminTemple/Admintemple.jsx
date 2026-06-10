@@ -355,7 +355,9 @@ const AdminTemple = () => {
 
     // Set image preview if image exists
     if (temple.image) {
-      setImagePreview(`${imageAPi}/${temple.image}`);
+      // setImagePreview(`${imageAPi}/${temple.image}`);
+      setImagePreview(`${imageAPi}${temple.image}`);
+
     } else {
       setImagePreview(null);
     }
@@ -652,7 +654,8 @@ const AdminTemple = () => {
               <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-3">
                 {hoveredTemple.image ? (
                   <img
-                    src={`${imageAPi}/${hoveredTemple.image}`}
+                    // src={`${imageAPi}/${hoveredTemple.image}`}
+                    src={`${imageAPi}${hoveredTemple.image}`}
                     alt={hoveredTemple.name}
                     className="w-16 h-16 object-cover rounded mx-auto sm:mx-0"
                   />
@@ -758,7 +761,8 @@ const AdminTemple = () => {
                       <td className="border p-2">
                         {t.image ? (
                           <img
-                            src={`${imageAPi}/${t.image}`}
+                            // src={`${imageAPi}/${t.image}`}
+                            src={`${imageAPi}${t.image}`}
                             alt={t.name}
                             className="w-12 h-12 md:w-16 md:h-16 object-cover rounded"
                           />

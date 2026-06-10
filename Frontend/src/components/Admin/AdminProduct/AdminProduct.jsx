@@ -326,7 +326,8 @@ const AdminProduct = () => {
 
     // Set image preview if image exists
     if (product.image) {
-      setImagePreview(`${imageAPi}/${product.image}`);
+      // setImagePreview(`${imageAPi}/${product.image}`);
+      setImagePreview(`${imageAPi}${product.image}`);
     }
 
     setFormData({
@@ -408,22 +409,20 @@ const AdminProduct = () => {
             setActiveTab("form");
             resetForm();
           }}
-          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${
-            activeTab === "form"
-              ? "border-b-2 border-orange-600 text-orange-600"
-              : "text-gray-500"
-          }`}
+          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${activeTab === "form"
+            ? "border-b-2 border-orange-600 text-orange-600"
+            : "text-gray-500"
+            }`}
         >
           {isEditMode ? "Edit Product" : "Add Product"}
         </button>
 
         <button
           onClick={() => setActiveTab("table")}
-          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${
-            activeTab === "table"
-              ? "border-b-2 border-orange-600 text-orange-600"
-              : "text-gray-500"
-          }`}
+          className={`px-3 py-2 text-sm md:text-base font-medium whitespace-nowrap ${activeTab === "table"
+            ? "border-b-2 border-orange-600 text-orange-600"
+            : "text-gray-500"
+            }`}
         >
           Product List
         </button>
@@ -656,11 +655,10 @@ const AdminProduct = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowActive(!showActive)}
-                className={`px-4 py-2 border rounded-lg transition-colors text-sm md:text-base font-medium ${
-                  showActive
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-600 text-white hover:bg-gray-700"
-                }`}
+                className={`px-4 py-2 border rounded-lg transition-colors text-sm md:text-base font-medium ${showActive
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
+                  }`}
               >
                 Showing: {showActive ? "Active" : "Inactive"}
               </button>
@@ -680,9 +678,8 @@ const AdminProduct = () => {
           {hoveredProduct && (
             <div
               ref={tooltipRef}
-              className={`fixed z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-3 md:p-4 w-[280px] md:w-96 max-h-[80vh] overflow-y-auto ${
-                tooltipSide === "right" ? "ml-2" : "mr-2"
-              }`}
+              className={`fixed z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-3 md:p-4 w-[280px] md:w-96 max-h-[80vh] overflow-y-auto ${tooltipSide === "right" ? "ml-2" : "mr-2"
+                }`}
               style={{
                 left: `${tooltipPosition.x}px`,
                 top: `${tooltipPosition.y}px`,
@@ -694,7 +691,8 @@ const AdminProduct = () => {
               <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-3">
                 {hoveredProduct.image ? (
                   <img
-                    src={`${imageAPi}/${hoveredProduct.image}`}
+                    // src={`${imageAPi}/${hoveredProduct.image}`}
+                    src={`${imageAPi}${hoveredProduct.image}`}
                     alt={hoveredProduct.name}
                     className="w-20 h-20 object-cover rounded-lg mx-auto sm:mx-0"
                   />
@@ -725,11 +723,10 @@ const AdminProduct = () => {
                   <div>
                     <span className="font-medium text-gray-700">Stock:</span>
                     <p
-                      className={`font-bold ${
-                        hoveredProduct.stock <= 10
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
+                      className={`font-bold ${hoveredProduct.stock <= 10
+                        ? "text-red-600"
+                        : "text-green-600"
+                        }`}
                     >
                       {hoveredProduct.stock} units
                     </p>
@@ -750,11 +747,10 @@ const AdminProduct = () => {
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="font-medium text-gray-700">Status:</span>
                   <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      hoveredProduct.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                    className={`px-2 py-1 rounded text-xs font-medium ${hoveredProduct.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {hoveredProduct.status}
                   </span>
@@ -846,7 +842,8 @@ const AdminProduct = () => {
                       <td className="border p-2">
                         {product.image ? (
                           <img
-                            src={`${imageAPi}/${product.image}`}
+                            // src={`${imageAPi}/${product.image}`}
+                            src={`${imageAPi}${product.image}`}
                             alt={product.name}
                             className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg"
                           />
@@ -879,11 +876,10 @@ const AdminProduct = () => {
                       </td>
                       <td className="border p-2">
                         <div
-                          className={`font-bold text-xs md:text-sm ${
-                            product.stock <= 10
-                              ? "text-red-600"
-                              : "text-green-600"
-                          }`}
+                          className={`font-bold text-xs md:text-sm ${product.stock <= 10
+                            ? "text-red-600"
+                            : "text-green-600"
+                            }`}
                         >
                           {product.stock} units
                         </div>
@@ -903,11 +899,10 @@ const AdminProduct = () => {
                           onClick={() =>
                             handleStatusToggle(product.id, product.status)
                           }
-                          className={`px-3 py-1 md:px-4 md:py-2 rounded-lg text-white text-xs md:text-sm font-medium transition-colors w-full ${
-                            product.status === "active"
-                              ? "bg-green-600 hover:bg-green-700"
-                              : "bg-gray-500 hover:bg-gray-600"
-                          }`}
+                          className={`px-3 py-1 md:px-4 md:py-2 rounded-lg text-white text-xs md:text-sm font-medium transition-colors w-full ${product.status === "active"
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-gray-500 hover:bg-gray-600"
+                            }`}
                         >
                           {product.status === "active" ? "Active" : "Inactive"}
                         </button>

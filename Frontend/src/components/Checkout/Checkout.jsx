@@ -48,7 +48,9 @@ export default function Checkout() {
         if (!imgPath) return "https://via.placeholder.com/100";
         if (imgPath.startsWith("http")) return imgPath;
         const cleanPath = imgPath.replaceAll("\\", "/");
-        return `${VITE_URL}/${cleanPath}`;
+        // return `${VITE_URL}/${cleanPath}`;
+        return `${VITE_URL}${cleanPath}`;
+
     };
 
     // ✅ Fetch Product by ID

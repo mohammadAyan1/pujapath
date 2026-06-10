@@ -33,7 +33,8 @@ export default function PujaCheckout() {
         if (!imgPath) return "/no-image.png";
         if (imgPath.startsWith("http")) return imgPath;
         const cleanPath = imgPath.replaceAll("\\", "/");
-        return `${VITE_URL}/${cleanPath}`;
+        // return `${VITE_URL}/${cleanPath}`;
+        return `${VITE_URL}${cleanPath}`;
     };
 
     // ✅ Fetch Puja by ID

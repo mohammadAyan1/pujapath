@@ -62,7 +62,9 @@ const AdminDashboard = () => {
   const getImageUrl = (imgPath) => {
     if (!imgPath) return null;
     const cleanPath = imgPath.replace(/\\/g, "/");
-    return IMAGE_BASE_URL + "/" + cleanPath;
+    // return IMAGE_BASE_URL + "/" + cleanPath;
+    return IMAGE_BASE_URL + cleanPath;
+
   };
 
   const getTitle = (item) => item?.name || `#${item?.id}`;

@@ -5,7 +5,8 @@ import api from "../../api/axios";
 const IMAGE_BASE = import.meta.env.VITE_BACKEND_FOR_URL;
 
 const imgUrl = (path) =>
-    path ? `${IMAGE_BASE}/${path.replaceAll("\\", "/")}` : "/no-image.png";
+    // path ? `${IMAGE_BASE}/${path.replaceAll("\\", "/")}` : "/no-image.png";
+    path ? `${IMAGE_BASE}${path.replaceAll("\\", "/")}` : "/no-image.png";
 
 const BookingDetails = () => {
     const { type, id } = useParams();
