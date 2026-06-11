@@ -8,6 +8,8 @@ import { Server } from "socket.io";
 ///
 import morgan from "morgan";
 
+import redisClient from "./src/utils/redis.js";
+
 import authRoutes from "./src/routes/auth.routes.js";
 import templeRoutes from "./src/routes/temple.routes.js";
 import pujaCategory from "./src/routes/puja-category.routes.js";
@@ -242,11 +244,33 @@ io.on("connection", (socket) => {
 // });
 
 
-server.listen(PORT || 3000, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT || 3000}`);
-  console.log("Auto deploy working");
-  console.log("CI/CD Working");
-});
+// server.listen(PORT || 3000, "0.0.0.0", () => {
+//   console.log(`Server running on port ${PORT || 3000}`);
+//   console.log("Auto deploy working");
+//   console.log("CI/CD Working");
+
+// });
+
+
+
+const startServer = async () => {
+  try {
+    await redisClient.connect();
+
+    console.log("Redis Connected");
+
+    server.listen(PORT || 3000, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT || 3000}`);
+      console.log("Auto deploy working");
+      console.log("CI/CD Working");
+    });
+  } catch (error) {
+    console.log("Redis Connection Failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 
 // app.listen(PORT || 3000, "0.0.0.0", () => {
