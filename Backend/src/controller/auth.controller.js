@@ -654,6 +654,90 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
+// export const resendOTP = async (req, res) => {
+//   const connection = db.promise();
+
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email is required",
+//       });
+//     }
+
+//     // 🔍 Check user
+//     const selectQuery = `
+//       SELECT id, is_verified,is_approved
+//       FROM users
+//       WHERE email = ?
+//     `;
+
+//     const [rows] = await connection.execute(selectQuery, [email]);
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     const user = rows[0];
+
+//     // ❌ Already verified
+//     if (user.is_verified) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email already verified",
+//       });
+//     }
+
+//     if (!user.is_approved) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "You could not resend OTP Please Contact Support Team ",
+//       });
+//     }
+
+//     // Generate new OTP
+//     const otp = generateOTP();
+//     const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000);
+
+//     const html = `
+//       <h2>Resend OTP For Email Verification</h2>
+//       <p>Your OTP is:</p>
+//       <h1>${otp}</h1>
+//       <p>This OTP is valid for <b>5 minutes</b>.</p>
+//     `;
+
+//     // 🔄 Update OTP
+//     const updateQuery = `
+//       UPDATE users
+//       SET otp = ?, otp_time_limit = ?
+//       WHERE id = ?
+//     `;
+
+//     await connection.execute(updateQuery, [otp, otpExpiryTime, user.id]);
+
+//     // 📧 Send OTP email
+//     await sendOTPEmail(email, "OTP Resend Successfully", html);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "OTP resent successfully",
+//     });
+//   } catch (error) {
+//     console.error("Resend OTP Error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to resend OTP",
+//     });
+//   }
+// };
+
+
 export const resendOTP = async (req, res) => {
   const connection = db.promise();
 
@@ -667,14 +751,14 @@ export const resendOTP = async (req, res) => {
       });
     }
 
-    // 🔍 Check user
-    const selectQuery = `
-      SELECT id, is_verified,is_approved
+    const [rows] = await connection.execute(
+      `
+      SELECT id, is_verified, is_approved
       FROM users
       WHERE email = ?
-    `;
-
-    const [rows] = await connection.execute(selectQuery, [email]);
+      `,
+      [email]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -685,7 +769,6 @@ export const resendOTP = async (req, res) => {
 
     const user = rows[0];
 
-    // ❌ Already verified
     if (user.is_verified) {
       return res.status(400).json({
         success: false,
@@ -696,13 +779,19 @@ export const resendOTP = async (req, res) => {
     if (!user.is_approved) {
       return res.status(400).json({
         success: false,
-        message: "You could not resend OTP Please Contact Support Team ",
+        message: "You could not resend OTP. Please contact support.",
       });
     }
 
-    // Generate new OTP
     const otp = generateOTP();
-    const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000);
+
+    await redisClient.set(
+      `verify:${email}`,
+      otp,
+      {
+        EX: 300,
+      }
+    );
 
     const html = `
       <h2>Resend OTP For Email Verification</h2>
@@ -711,22 +800,17 @@ export const resendOTP = async (req, res) => {
       <p>This OTP is valid for <b>5 minutes</b>.</p>
     `;
 
-    // 🔄 Update OTP
-    const updateQuery = `
-      UPDATE users
-      SET otp = ?, otp_time_limit = ?
-      WHERE id = ?
-    `;
-
-    await connection.execute(updateQuery, [otp, otpExpiryTime, user.id]);
-
-    // 📧 Send OTP email
-    await sendOTPEmail(email, "OTP Resend Successfully", html);
+    await sendOTPEmail(
+      email,
+      "OTP Resend Successfully",
+      html
+    );
 
     return res.status(200).json({
       success: true,
       message: "OTP resent successfully",
     });
+
   } catch (error) {
     console.error("Resend OTP Error:", error);
 
@@ -736,6 +820,79 @@ export const resendOTP = async (req, res) => {
     });
   }
 };
+
+
+
+// export const forgotPassword = async (req, res) => {
+//   const connection = db.promise();
+
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email is required",
+//       });
+//     }
+
+//     // 🔍 Check user
+//     const [rows] = await connection.execute(
+//       "SELECT id,is_approved FROM users WHERE email = ?",
+//       [email],
+//     );
+
+
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     if (!rows?.[0]?.is_approved) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "You could not Forget Password Please Contact Support Team ",
+//       });
+//     }
+//     const otp = generateOTP();
+//     const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000);
+
+//     // 🔄 Update OTP
+//     await connection.execute(
+//       `
+//       UPDATE users 
+//       SET otp = ?, otp_time_limit = ?
+//       WHERE email = ?
+//       `,
+//       [otp, otpExpiryTime, email],
+//     );
+
+//     const html = `
+//       <h2>Reset Password OTP</h2>
+//       <p>Your OTP is:</p>
+//       <h1>${otp}</h1>
+//       <p>This OTP is valid for <b>5 minutes</b>.</p>
+//     `;
+
+//     // 📧 Send OTP
+//     await sendOTPEmail(email, "Reset Password OTP", html);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "OTP sent to email",
+//     });
+//   } catch (error) {
+//     console.error("Forgot Password Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to send OTP",
+//     });
+//   }
+// };
+
 
 export const forgotPassword = async (req, res) => {
   const connection = db.promise();
@@ -750,13 +907,14 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // 🔍 Check user
     const [rows] = await connection.execute(
-      "SELECT id,is_approved FROM users WHERE email = ?",
-      [email],
+      `
+      SELECT id, is_approved
+      FROM users
+      WHERE email = ?
+      `,
+      [email]
     );
-
-
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -765,23 +923,22 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    if (!rows?.[0]?.is_approved) {
+    if (!rows[0].is_approved) {
       return res.status(400).json({
         success: false,
-        message: "You could not Forget Password Please Contact Support Team ",
+        message:
+          "You could not reset password. Please contact support.",
       });
     }
-    const otp = generateOTP();
-    const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000);
 
-    // 🔄 Update OTP
-    await connection.execute(
-      `
-      UPDATE users 
-      SET otp = ?, otp_time_limit = ?
-      WHERE email = ?
-      `,
-      [otp, otpExpiryTime, email],
+    const otp = generateOTP();
+
+    await redisClient.set(
+      `reset:${email}`,
+      otp,
+      {
+        EX: 300,
+      }
     );
 
     const html = `
@@ -791,21 +948,108 @@ export const forgotPassword = async (req, res) => {
       <p>This OTP is valid for <b>5 minutes</b>.</p>
     `;
 
-    // 📧 Send OTP
-    await sendOTPEmail(email, "Reset Password OTP", html);
+    await sendOTPEmail(
+      email,
+      "Reset Password OTP",
+      html
+    );
 
     return res.status(200).json({
       success: true,
       message: "OTP sent to email",
     });
+
   } catch (error) {
     console.error("Forgot Password Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to send OTP",
     });
   }
 };
+
+
+// export const resetPassword = async (req, res) => {
+//   const connection = db.promise();
+
+//   try {
+//     const { email, otp, newPassword } = req.body;
+
+//     if (!email || !otp || !newPassword) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields are required",
+//       });
+//     }
+
+//     // 🔍 Get user
+//     const [rows] = await connection.execute(
+//       `
+//       SELECT id, otp, otp_time_limit ,is_approved
+//       FROM users 
+//       WHERE email = ?
+//       `,
+//       [email],
+//     );
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     if (!rows?.[0]?.is_approved) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "You could not Reset Password Please Contact Support Team ",
+//       });
+//     }
+
+//     const user = rows[0];
+
+//     // ❌ OTP mismatch
+//     if (String(user.otp) !== String(otp)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid OTP",
+//       });
+//     }
+
+//     // ❌ OTP expired
+//     if (new Date(user.otp_time_limit) < new Date()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP expired",
+//       });
+//     }
+
+//     // 🔐 Hash new password
+//     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+//     // ✅ Update password & clear OTP
+//     await connection.execute(
+//       `
+//       UPDATE users
+//       SET password = ?, otp = NULL, otp_time_limit = NULL
+//       WHERE id = ?
+//       `,
+//       [hashedPassword, user.id],
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Password reset successfully",
+//     });
+//   } catch (error) {
+//     console.error("Reset Password Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Password reset failed",
+//     });
+//   }
+// };
 
 export const resetPassword = async (req, res) => {
   const connection = db.promise();
@@ -820,14 +1064,13 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // 🔍 Get user
     const [rows] = await connection.execute(
       `
-      SELECT id, otp, otp_time_limit ,is_approved
-      FROM users 
+      SELECT id, is_approved
+      FROM users
       WHERE email = ?
       `,
-      [email],
+      [email]
     );
 
     if (rows.length === 0) {
@@ -837,50 +1080,60 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    if (!rows?.[0]?.is_approved) {
-      return res.status(400).json({
-        success: false,
-        message: "You could not Reset Password Please Contact Support Team ",
-      });
-    }
-
     const user = rows[0];
 
-    // ❌ OTP mismatch
-    if (String(user.otp) !== String(otp)) {
+    if (!user.is_approved) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP",
+        message:
+          "You could not reset password. Please contact support.",
       });
     }
 
-    // ❌ OTP expired
-    if (new Date(user.otp_time_limit) < new Date()) {
+    const savedOtp = await redisClient.get(
+      `reset:${email}`
+    );
+
+    if (!savedOtp) {
       return res.status(400).json({
         success: false,
         message: "OTP expired",
       });
     }
 
-    // 🔐 Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    if (String(savedOtp) !== String(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
-    // ✅ Update password & clear OTP
+    const hashedPassword = await bcrypt.hash(
+      newPassword,
+      10
+    );
+
     await connection.execute(
       `
       UPDATE users
-      SET password = ?, otp = NULL, otp_time_limit = NULL
+      SET password = ?
       WHERE id = ?
       `,
-      [hashedPassword, user.id],
+      [hashedPassword, user.id]
+    );
+
+    await redisClient.del(
+      `reset:${email}`
     );
 
     return res.status(200).json({
       success: true,
       message: "Password reset successfully",
     });
+
   } catch (error) {
     console.error("Reset Password Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Password reset failed",
