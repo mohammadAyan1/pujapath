@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import db from "../utils/db.js";
 import { sendOTPEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
-
+import redisClient from "../utils/redis.js";
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000);
@@ -131,18 +131,128 @@ export const logout = async (req, res) => {
   }
 };
 
+// export const register = async (req, res) => {
+//   const connection = await db.promise().getConnection();
+
+
+
+//   // console.log(adminAuthentication);
+
+
+//   try {
+//     const { name, email, mobile, password } = req.body;
+
+//     // ✅ Basic validation
+//     if (!name || !email || !mobile || !password) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields are required",
+//       });
+//     }
+
+//     // ✅ 1. Check if email OR mobile already exists
+//     const [existingUsers] = await connection.execute(
+//       `
+//       SELECT id, email, mobile
+//       FROM users
+//       WHERE email = ? OR mobile = ?
+//       `,
+//       [email, mobile],
+//     );
+
+//     if (existingUsers.length > 0) {
+//       const existingUser = existingUsers[0];
+
+//       if (existingUser.email === email) {
+//         return res.status(409).json({
+//           success: false,
+//           message: "Email already registered",
+//         });
+//       }
+
+//       if (existingUser.mobile === mobile) {
+//         return res.status(409).json({
+//           success: false,
+//           message: "Mobile number already registered",
+//         });
+//       }
+//     }
+
+//     // 🔐 2. Start transaction ONLY after validation
+//     await connection.beginTransaction();
+
+//     // 🔐 Hash password
+//     const hashPassword = await bcrypt.hash(password, 10);
+
+//     // 🔢 Generate OTP
+//     const otp = generateOTP();
+//     const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+//     // ✅ 3. Insert user
+//     const insertQuery = `
+//       INSERT INTO users 
+//       (name, email, mobile, password, otp, otp_time_limit)
+//       VALUES (?, ?, ?, ?, ?, ?)
+//     `;
+
+//     await connection.execute(insertQuery, [
+//       name,
+//       email,
+//       mobile,
+//       hashPassword,
+//       otp,
+//       otpExpiryTime,
+//     ]);
+
+//     // 📧 OTP email template
+//     const html = `
+//       <h2>Email Verification</h2>
+//       <p>Your OTP is:</p>
+//       <h1>${otp}</h1>
+//       <p>This OTP is valid for <b>5 minutes</b>.</p>
+//     `;
+
+//     // 📧 Send email
+//     await sendOTPEmail(email, "Email Verification OTP", html);
+
+//     // ✅ 4. Commit transaction
+//     await connection.commit();
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "User registered successfully. OTP sent to email.",
+//       data: { email },
+//     });
+//   } catch (error) {
+//     // ❌ Rollback on ANY failure
+//     await connection.rollback();
+//     console.log(error);
+
+//     console.error("Register Error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Registration failed",
+//     });
+//   } finally {
+//     connection.release();
+//   }
+// };
+
+
+
+
+// Admin register user
+
+
+
+
 export const register = async (req, res) => {
   const connection = await db.promise().getConnection();
-
-
-
-  // console.log(adminAuthentication);
-
 
   try {
     const { name, email, mobile, password } = req.body;
 
-    // ✅ Basic validation
     if (!name || !email || !mobile || !password) {
       return res.status(400).json({
         success: false,
@@ -150,14 +260,14 @@ export const register = async (req, res) => {
       });
     }
 
-    // ✅ 1. Check if email OR mobile already exists
+    // Check existing user
     const [existingUsers] = await connection.execute(
       `
       SELECT id, email, mobile
       FROM users
       WHERE email = ? OR mobile = ?
       `,
-      [email, mobile],
+      [email, mobile]
     );
 
     if (existingUsers.length > 0) {
@@ -178,21 +288,19 @@ export const register = async (req, res) => {
       }
     }
 
-    // 🔐 2. Start transaction ONLY after validation
     await connection.beginTransaction();
 
-    // 🔐 Hash password
+    // Password hash
     const hashPassword = await bcrypt.hash(password, 10);
 
-    // 🔢 Generate OTP
+    // Generate OTP
     const otp = generateOTP();
-    const otpExpiryTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // ✅ 3. Insert user
+    // Insert user WITHOUT otp column
     const insertQuery = `
-      INSERT INTO users 
-      (name, email, mobile, password, otp, otp_time_limit)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO users
+      (name, email, mobile, password)
+      VALUES (?, ?, ?, ?)
     `;
 
     await connection.execute(insertQuery, [
@@ -200,11 +308,17 @@ export const register = async (req, res) => {
       email,
       mobile,
       hashPassword,
-      otp,
-      otpExpiryTime,
     ]);
 
-    // 📧 OTP email template
+    // Save OTP in Redis for 5 min
+    await redisClient.set(
+      `verify:${email}`,
+      otp,
+      {
+        EX: 300, // 5 minutes
+      }
+    );
+
     const html = `
       <h2>Email Verification</h2>
       <p>Your OTP is:</p>
@@ -212,10 +326,12 @@ export const register = async (req, res) => {
       <p>This OTP is valid for <b>5 minutes</b>.</p>
     `;
 
-    // 📧 Send email
-    await sendOTPEmail(email, "Email Verification OTP", html);
+    await sendOTPEmail(
+      email,
+      "Email Verification OTP",
+      html
+    );
 
-    // ✅ 4. Commit transaction
     await connection.commit();
 
     return res.status(201).json({
@@ -223,10 +339,10 @@ export const register = async (req, res) => {
       message: "User registered successfully. OTP sent to email.",
       data: { email },
     });
+
   } catch (error) {
-    // ❌ Rollback on ANY failure
+
     await connection.rollback();
-    console.log(error);
 
     console.error("Register Error:", error);
 
@@ -234,12 +350,12 @@ export const register = async (req, res) => {
       success: false,
       message: "Registration failed",
     });
+
   } finally {
     connection.release();
   }
 };
 
-// Admin register user
 
 export const adminRegister = async (req, res) => {
 
@@ -348,6 +464,94 @@ export const adminRegister = async (req, res) => {
 };
 
 
+// export const verifyEmail = async (req, res) => {
+//   const connection = db.promise();
+
+//   try {
+//     const { email, otp } = req.body;
+
+//     if (!email || !otp) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email and OTP are required",
+//       });
+//     }
+
+//     // 🔍 Check user
+//     const selectQuery = `
+//       SELECT id, otp, otp_time_limit, is_verified,is_approved
+//       FROM users
+//       WHERE email = ?
+//     `;
+
+//     const [rows] = await connection.execute(selectQuery, [email]);
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     const user = rows[0];
+
+//     // ❌ Already verified
+//     if (user.is_verified) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email already verified",
+//       });
+//     }
+
+//     if (!user.is_approved) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "You Could not verify your main Please contact Support Team",
+//       });
+//     }
+
+//     // ❌ OTP mismatch
+//     if (String(user.otp) !== String(otp)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid OTP",
+//       });
+//     }
+
+//     // ❌ OTP expired
+//     if (new Date(user.otp_time_limit) < new Date()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP expired",
+//       });
+//     }
+
+//     // ✅ Verify user
+//     const updateQuery = `
+//       UPDATE users
+//       SET is_verified = true,
+//           otp = NULL,
+//           otp_time_limit = NULL
+//       WHERE id = ?
+//     `;
+
+//     await connection.execute(updateQuery, [user.id]);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Email verified successfully",
+//     });
+//   } catch (error) {
+//     console.error("Verify Email Error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Email verification failed",
+//     });
+//   }
+// };
+
+
 export const verifyEmail = async (req, res) => {
   const connection = db.promise();
 
@@ -361,14 +565,15 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
-    // 🔍 Check user
-    const selectQuery = `
-      SELECT id, otp, otp_time_limit, is_verified,is_approved
+    // User check
+    const [rows] = await connection.execute(
+      `
+      SELECT id, is_verified, is_approved
       FROM users
       WHERE email = ?
-    `;
-
-    const [rows] = await connection.execute(selectQuery, [email]);
+      `,
+      [email]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -379,7 +584,7 @@ export const verifyEmail = async (req, res) => {
 
     const user = rows[0];
 
-    // ❌ Already verified
+    // Already verified
     if (user.is_verified) {
       return res.status(400).json({
         success: false,
@@ -387,51 +592,65 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
+    // Admin approval check
     if (!user.is_approved) {
       return res.status(400).json({
         success: false,
-        message: "You Could not verify your main Please contact Support Team",
+        message:
+          "You Could not verify your email. Please contact Support Team",
       });
     }
 
-    // ❌ OTP mismatch
-    if (String(user.otp) !== String(otp)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
+    // OTP from Redis
+    const savedOtp = await redisClient.get(
+      `verify:${email}`
+    );
 
-    // ❌ OTP expired
-    if (new Date(user.otp_time_limit) < new Date()) {
+    // OTP Expired
+    if (!savedOtp) {
       return res.status(400).json({
         success: false,
         message: "OTP expired",
       });
     }
 
-    // ✅ Verify user
-    const updateQuery = `
-      UPDATE users
-      SET is_verified = true,
-          otp = NULL,
-          otp_time_limit = NULL
-      WHERE id = ?
-    `;
+    // OTP Invalid
+    if (String(savedOtp) !== String(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
-    await connection.execute(updateQuery, [user.id]);
+    // Verify User
+    await connection.execute(
+      `
+      UPDATE users
+      SET is_verified = true
+      WHERE id = ?
+      `,
+      [user.id]
+    );
+
+    // Delete OTP from Redis
+    await redisClient.del(
+      `verify:${email}`
+    );
 
     return res.status(200).json({
       success: true,
       message: "Email verified successfully",
     });
+
   } catch (error) {
+
     console.error("Verify Email Error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Email verification failed",
     });
+
   }
 };
 
