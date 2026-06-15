@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "express-rate-limit": "^8.5.2",
+    "rate-limit-redis": "^5.0.0",
     "web-push": "^3.6.7"
   }
 }

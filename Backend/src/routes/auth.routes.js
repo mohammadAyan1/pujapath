@@ -11,6 +11,7 @@ import {
 
 } from "../controller/auth.controller.js";
 import { isAuthenticated } from "../middelware/auth.middleware.js";
+import { authLimiter } from "../middelware/rateLimiter.js";
 
 const authRoutes = express.Router();
 authRoutes.get("/checkUserLogin", isAuthenticated, (req, res) => {
@@ -19,14 +20,14 @@ authRoutes.get("/checkUserLogin", isAuthenticated, (req, res) => {
     data: req.user,
   });
 });
-authRoutes.post("/login", login);
-authRoutes.post("/logout", isAuthenticated, logout);
-authRoutes.post("/register", register);
-authRoutes.post("/verify", verifyEmail);
-authRoutes.post("/resend", resendOTP);
-authRoutes.post("/forgot-password", forgotPassword);
-authRoutes.post("/reset-password", resetPassword);
+authRoutes.post("/login", authLimiter, login);
+authRoutes.post("/logout", authLimiter, isAuthenticated, logout);
+authRoutes.post("/register", authLimiter, register);
+authRoutes.post("/verify", authLimiter, verifyEmail);
+authRoutes.post("/resend", authLimiter, resendOTP);
+authRoutes.post("/forgot-password", authLimiter, forgotPassword);
+authRoutes.post("/reset-password", authLimiter, resetPassword);
 
-authRoutes.post("/admin/register", isAuthenticated, adminRegister);
+authRoutes.post("/admin/register", authLimiter, isAuthenticated, adminRegister);
 
 export default authRoutes;
