@@ -23,6 +23,7 @@ export const getHomeData = async (req, res) => {
     }
     ////////////////////
     const connection = db.promise();
+    // const connection = db;
 
     // ✅ Temples
     const [temples] = await connection.execute(`

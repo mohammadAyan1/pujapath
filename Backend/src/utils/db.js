@@ -20,9 +20,6 @@
 // });
 
 // export default db;
-
-
-
 import mysql from "mysql2";
 import dotenv from "dotenv";
 
@@ -42,6 +39,19 @@ const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+
+  connectTimeout: 10000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
 
-export default db.promise();
+db.getConnection((err, conn) => {
+  if (err) {
+    console.error("DB Connection Error:", err);
+  } else {
+    console.log("DB Connected Successfully");
+    conn.release();
+  }
+});
+
+export default db;
