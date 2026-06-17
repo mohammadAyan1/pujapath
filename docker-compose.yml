@@ -16,10 +16,43 @@ services:
       - redis
 
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "http://localhost:3000/health" ]
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  prometheus:
+    image: prom/prometheus
+    container_name: pujapath-prometheus
+
+    depends_on:
+      - backend
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+    ports:
+      - "9090:9090"
+
+    restart: always
+
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: pujapath-grafana
+
+    ports:
+      - "3001:3000"
+
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+    restart: always
+
+    networks:
+      - app-network
 
   frontend:
     image: mohammadayan7879/pujapathvedic-frontend:latest
@@ -75,3 +108,4 @@ networks:
 
 volumes:
   redis-data:
+  grafana-data:
