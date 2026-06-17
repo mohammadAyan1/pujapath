@@ -32,7 +32,11 @@ import {
   saveMessage,
 } from "./src/controller/chat.controller.js";
 import cardBookingRoutes from "./src/routes/cartBooking.routes.js";
-
+import { errorHandler } from "./src/middelware/errorHandler.js";
+import { requestTracker } from "./src/middelware/requestTracker.js";
+import { requestLogger } from "./src/middelware/requestLogger.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/config/swagger.js";
 dotenv.config();
 
 const app = express();
@@ -50,6 +54,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(requestTracker);
+app.use(requestLogger);
+
 
 ////
 app.use(morgan("combined"));
@@ -65,6 +72,13 @@ app.get("/health", (req, res) => {
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
+
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // ✅ API Routes
 app.use("/api/auth", authRoutes);
@@ -90,6 +104,8 @@ app.use("/api/cart-booking", cardBookingRoutes);
 
 // ✅ Static for images
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+app.use(errorHandler);
 
 const server = http.createServer(app);
 

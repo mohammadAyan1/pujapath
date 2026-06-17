@@ -140,7 +140,7 @@ export const getHomeData = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: homeData,
-      asd: "from redis "
+      asd: "from db "
     });
 
 
