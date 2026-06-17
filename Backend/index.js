@@ -37,6 +37,7 @@ import { requestTracker } from "./src/middelware/requestTracker.js";
 import { requestLogger } from "./src/middelware/requestLogger.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/config/swagger.js";
+import { register } from "./src/monitoring/metrics.js";
 dotenv.config();
 
 const app = express();
@@ -56,7 +57,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestTracker);
 app.use(requestLogger);
-
+app.use(helmet());
+app.use(compression());
 
 ////
 app.use(morgan("combined"));
@@ -73,6 +75,11 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
+
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
 
 app.use(
   "/api/api-docs",
