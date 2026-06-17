@@ -40,6 +40,7 @@ import { requestLogger } from "./src/middelware/requestLogger.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/config/swagger.js";
 import { register } from "./src/monitoring/metrics.js";
+import { prometheusMiddleware } from "./src/middelware/prometheus.middleware.js";
 dotenv.config();
 
 const app = express();
@@ -61,6 +62,7 @@ app.use(requestTracker);
 app.use(requestLogger);
 app.use(helmet());
 app.use(compression());
+app.use(prometheusMiddleware);
 
 ////
 app.use(morgan("combined"));
