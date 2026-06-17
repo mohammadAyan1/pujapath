@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import http from "http";
 import { Server } from "socket.io";
+import helmet from "helmet";
+import compression from "compression";
 ///
 import morgan from "morgan";
 
