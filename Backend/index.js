@@ -75,7 +75,7 @@ app.get("/", (req, res) => {
 
 
 app.use(
-  "/api-docs",
+  "/api/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec)
 );
