@@ -63,7 +63,7 @@ app.use(compression());
 ////
 app.use(morgan("combined"));
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
@@ -71,12 +71,12 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("Server is running");
 });
 
 
-app.get("/metrics", async (req, res) => {
+app.get("/api/metrics", async (req, res) => {
   res.set("Content-Type", register.contentType);
   res.end(await register.metrics());
 });
