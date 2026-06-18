@@ -1,6 +1,6 @@
 import db from "../utils/db.js";
 import { getCache, setCache } from "../utils/cache.js";
-
+import { redisHitCounter, redisMissCounter } from "../monitoring/metrics.js";
 
 export const getHomeData = async (req, res) => {
   try {
@@ -11,7 +11,7 @@ export const getHomeData = async (req, res) => {
       await getCache("home_page");
 
     if (cachedHome) {
-
+      redisHitCounter.inc();
       console.log("Home Data From Redis");
 
       return res.status(200).json({
@@ -21,6 +21,9 @@ export const getHomeData = async (req, res) => {
       });
 
     }
+
+    redisMissCounter.inc();
+
     ////////////////////
     const connection = db.promise();
     // const connection = db;

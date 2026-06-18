@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import db from "../utils/db.js";
+import { bookingCounter } from "../monitoring/metrics.js";
 
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -31,6 +32,7 @@ const parseCommunicationArray = (comm) => {
 // ✅ 1) Create Razorpay Order for Astro/Pandit booking
 export const createAstroRazorpayOrder = async (req, res) => {
   let connection;
+  bookingCounter.inc();
 
   try {
     const userId = req?.user?.id;

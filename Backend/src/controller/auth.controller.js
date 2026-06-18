@@ -3,13 +3,18 @@ import db from "../utils/db.js";
 import { sendOTPEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 import redisClient from "../utils/redis.js";
-
+import { loginCounter } from "../monitoring/metrics.js";
+import { registerCounter } from "../monitoring/metrics.js";
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 
 export const login = async (req, res) => {
+
+  loginCounter.inc();
+
   const connection = db.promise();
+
 
   try {
 
@@ -248,6 +253,9 @@ export const logout = async (req, res) => {
 
 
 export const register = async (req, res) => {
+
+  registerCounter.inc();
+
   const connection = await db.promise().getConnection();
 
   try {
