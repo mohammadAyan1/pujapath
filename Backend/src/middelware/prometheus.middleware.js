@@ -25,6 +25,18 @@ export const responseTimeMiddleware = (req, res, next) => {
 
     res.on("finish", () => {
 
+
+        console.log("STATUS =>", res.statusCode);
+
+        if (res.statusCode >= 400) {
+            console.log("ERROR COUNTED");
+
+            errorCounter
+                .labels(String(res.statusCode))
+                .inc();
+        }
+
+
         const duration =
             (Date.now() - start) / 1000;
 
