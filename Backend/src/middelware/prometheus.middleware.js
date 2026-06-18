@@ -17,25 +17,32 @@
 
 
 import { httpDuration } from "../monitoring/metrics.js";
+import { errorCounter } from "../monitoring/metrics.js";
 
-export const responseTimeMiddleware =
-    (req, res, next) => {
+export const responseTimeMiddleware = (req, res, next) => {
 
-        const start = Date.now();
+    const start = Date.now();
 
-        res.on("finish", () => {
+    res.on("finish", () => {
 
-            const duration =
-                (Date.now() - start) / 1000;
+        const duration =
+            (Date.now() - start) / 1000;
 
-            httpDuration
-                .labels(
-                    req.method,
-                    req.route?.path || req.path,
-                    res.statusCode
-                )
-                .observe(duration);
-        });
+        httpDuration
+            .labels(
+                req.method,
+                req.route?.path || req.path,
+                res.statusCode
+            )
+            .observe(duration);
 
-        next();
-    };
+        // Error Counter
+        if (res.statusCode >= 400) {
+            errorCounter
+                .labels(res.statusCode)
+                .inc();
+        }
+    });
+
+    next();
+};
